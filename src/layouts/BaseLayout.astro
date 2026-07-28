@@ -15,6 +15,7 @@ const {
 <!doctype html>
 <html lang="en">
   <head>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -30,5 +31,16 @@ const {
 
   <body>
     <slot />
+    <script>
+  if (window.netlifyIdentity) {
+    window.netlifyIdentity.on("init", (user) => {
+      if (!user) {
+        window.netlifyIdentity.on("login", () => {
+          window.location.href = "/admin/";
+        });
+      }
+    });
+  }
+</script>
   </body>
 </html>
