@@ -3,7 +3,7 @@ backend:
   branch: main
 
 media_folder: public/images/uploads
-public_folder: /images/uploads
+public_folder: images/uploads
 
 site_url: https://irvingcollege.church
 display_url: https://irvingcollege.church
