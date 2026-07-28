@@ -1,0 +1,18 @@
+---
+interface Props {
+  href: string;
+  outline?: boolean;
+}
+
+const { href, outline = false } = Astro.props;
+---
+
+<a
+  href={href}
+  class:list={[
+    "button",
+    { "button-outline": outline }
+  ]}
+>
+  <slot />
+</a>

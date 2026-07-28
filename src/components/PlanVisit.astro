@@ -1,0 +1,407 @@
+---
+import Container from "./Container.astro";
+import Section from "./Section.astro";
+---
+
+<Section id="visit" soft>
+  <Container>
+    <div class="visit-intro">
+      <p class="eyebrow">Your First Visit</p>
+
+      <h2>We'd Love to Meet You</h2>
+
+      <p class="intro-text">
+        No matter your background or where you are in life, you'll find a warm
+        welcome at Irving College Baptist Church.
+      </p>
+    </div>
+
+    <div class="visit-feature">
+      <div class="visit-photo">
+        <img
+          src="/images/placeholders/church-family.jpg"
+          alt="Irving College Baptist Church congregation"
+          width="1200"
+          height="900"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="schedule-panel">
+        <p class="panel-eyebrow">Join Us This Week</p>
+        <h3>Service Times</h3>
+
+        <div class="schedule-list">
+          <div class="schedule-item">
+            <div>
+              <span class="schedule-day">Sunday</span>
+              <p>Sunday School</p>
+            </div>
+            <strong>9:30 AM</strong>
+          </div>
+
+          <div class="schedule-item">
+            <div>
+              <span class="schedule-day">Sunday</span>
+              <p>Morning Worship</p>
+            </div>
+            <strong>10:30 AM</strong>
+          </div>
+
+          <div class="schedule-item">
+            <div>
+              <span class="schedule-day">Wednesday</span>
+              <p>Wednesday Meal</p>
+            </div>
+            <strong>5:30 PM</strong>
+          </div>
+
+          <div class="schedule-item">
+            <div>
+              <span class="schedule-day">Wednesday</span>
+              <p>Bible Study</p>
+            </div>
+            <strong>6:30 PM</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="expectation-grid">
+      <article class="expectation-item">
+        <span class="check" aria-hidden="true">✓</span>
+
+        <div>
+          <h3>Come as You Are</h3>
+          <p>There is no dress code. Wear whatever makes you comfortable.</p>
+        </div>
+      </article>
+
+      <article class="expectation-item">
+        <span class="check" aria-hidden="true">✓</span>
+
+        <div>
+          <h3>Bringing Children?</h3>
+          <p>
+            Nursery and children's classes are available, with volunteers ready
+            to help your family.
+          </p>
+        </div>
+      </article>
+
+      <article class="expectation-item">
+        <span class="check" aria-hidden="true">✓</span>
+
+        <div>
+          <h3>What Is Worship Like?</h3>
+          <p>
+            Expect Christ-centered worship, biblical preaching, and a friendly
+            church family.
+          </p>
+        </div>
+      </article>
+
+      <article class="expectation-item">
+        <span class="check" aria-hidden="true">✓</span>
+
+        <div>
+          <h3>We'll Help You Find Your Way</h3>
+          <p>
+            Friendly volunteers will be available to answer questions and help
+            you get settled.
+          </p>
+        </div>
+      </article>
+    </div>
+
+    <div class="visit-action">
+      <div>
+        <p class="action-eyebrow">Questions Before You Visit?</p>
+        <h3>We're Happy to Help</h3>
+      </div>
+
+      <div class="action-buttons">
+        <a class="primary-button" href="#contact">
+          Plan Your Visit
+        </a>
+
+        <a
+          class="secondary-button"
+          href="https://www.google.com/maps/search/?api=1&query=Irving+College+Baptist+Church"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Get Directions
+        </a>
+      </div>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .visit-intro {
+    max-width: 760px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .eyebrow,
+  .panel-eyebrow,
+  .action-eyebrow {
+    margin: 0 0 0.75rem;
+    color: var(--color-primary);
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .visit-intro h2 {
+    margin: 0;
+    font-size: clamp(2.25rem, 5vw, 4rem);
+    line-height: 1.05;
+  }
+
+  .intro-text {
+    max-width: 680px;
+    margin: 1.25rem auto 0;
+    font-size: 1.1rem;
+    line-height: 1.7;
+  }
+
+  .visit-feature {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+    margin-top: 3.5rem;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid rgba(20, 45, 35, 0.08);
+    border-radius: 1.75rem;
+    box-shadow: 0 20px 55px rgba(20, 45, 35, 0.1);
+  }
+
+  .visit-photo {
+    min-height: 500px;
+    background: rgba(49, 92, 58, 0.08);
+  }
+
+  .visit-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+    object-fit: cover;
+  }
+
+  .schedule-panel {
+    padding: clamp(2rem, 5vw, 3.5rem);
+    background: #ffffff;
+  }
+
+  .schedule-panel h3 {
+    margin: 0 0 2rem;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  }
+
+  .schedule-list {
+    display: grid;
+  }
+
+  .schedule-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.15rem 0;
+    border-bottom: 1px solid rgba(20, 45, 35, 0.1);
+  }
+
+  .schedule-item:first-child {
+    padding-top: 0;
+  }
+
+  .schedule-item:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .schedule-day {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--color-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .schedule-item p {
+    margin: 0;
+    font-weight: 650;
+  }
+
+  .schedule-item strong {
+    flex: 0 0 auto;
+    font-size: 1.05rem;
+    white-space: nowrap;
+  }
+
+  .expectation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .expectation-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1.75rem;
+    background: #ffffff;
+    border: 1px solid rgba(20, 45, 35, 0.08);
+    border-radius: 1.25rem;
+  }
+
+  .check {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    color: #ffffff;
+    background: var(--color-primary);
+    border-radius: 50%;
+    font-weight: 800;
+  }
+
+  .expectation-item h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.2rem;
+  }
+
+  .expectation-item p {
+    margin: 0;
+    line-height: 1.65;
+  }
+
+  .visit-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding: clamp(2rem, 5vw, 3rem);
+    color: #ffffff;
+    background: var(--color-primary-dark);
+    border-radius: 1.5rem;
+  }
+
+  .visit-action .action-eyebrow {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .visit-action h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  }
+
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+  }
+
+  .primary-button,
+  .secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+    padding: 0.85rem 1.5rem;
+    border: 2px solid #ffffff;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .primary-button {
+    color: var(--color-primary-dark);
+    background: #ffffff;
+  }
+
+  .secondary-button {
+    color: #ffffff;
+    background: transparent;
+  }
+
+  .primary-button:hover,
+  .primary-button:focus-visible,
+  .secondary-button:hover,
+  .secondary-button:focus-visible {
+    color: var(--color-primary-dark);
+    background: var(--color-background-soft);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 900px) {
+    .visit-feature {
+      grid-template-columns: 1fr;
+    }
+
+    .visit-photo,
+    .visit-photo img {
+      min-height: 380px;
+    }
+
+    .expectation-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .visit-action {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .visit-feature {
+      margin-top: 2.5rem;
+      border-radius: 1.25rem;
+    }
+
+    .visit-photo,
+    .visit-photo img {
+      min-height: 280px;
+    }
+
+    .schedule-item {
+      align-items: flex-start;
+    }
+
+    .expectation-item {
+      padding: 1.35rem;
+    }
+
+    .action-buttons {
+      width: 100%;
+    }
+
+    .primary-button,
+    .secondary-button {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .primary-button,
+    .secondary-button {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,265 @@
+---
+interface Props {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  text: string;
+  image: string;
+  visitButtonText: string;
+  sermonButtonText: string;
+}
+
+const {
+  eyebrow,
+  title,
+  subtitle,
+  text,
+  image,
+  visitButtonText,
+  sermonButtonText,
+} = Astro.props;
+---
+
+<section
+  id="top"
+  class="hero"
+  aria-labelledby="hero-title"
+  style={`background-image:
+    linear-gradient(
+      rgba(8, 18, 12, 0.56),
+      rgba(8, 18, 12, 0.78)
+    ),
+    url('${image}');`}
+>
+  <div class="hero-content">
+    <p class="hero-eyebrow">{eyebrow}</p>
+
+    <h1 id="hero-title">
+      {title}
+      <span>{subtitle}</span>
+    </h1>
+
+    <p class="hero-text">{text}</p>
+
+    <div class="hero-actions">
+      <a class="button-primary" href="#visit">
+        {visitButtonText}
+      </a>
+
+      <a class="button-secondary" href="#sermon">
+        <span class="play-icon" aria-hidden="true">▶</span>
+        {sermonButtonText}
+      </a>
+    </div>
+
+    <div class="service-summary" aria-label="Sunday service times">
+      <span>Sunday School · 9:30 AM</span>
+      <span class="divider" aria-hidden="true"></span>
+      <span>Worship · 10:30 AM</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: clamp(560px, 76vh, 720px);
+    overflow: hidden;
+    padding: clamp(4rem, 7vw, 6rem) 1.5rem;
+    color: #ffffff;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.03),
+        transparent 42%
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(8, 18, 12, 0.04),
+        rgba(8, 18, 12, 0.2)
+      );
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 820px);
+    margin-inline: auto;
+    text-align: center;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.32);
+  }
+
+  .hero-eyebrow {
+    margin: 0 0 1.15rem;
+    font-family: var(--font-heading);
+    font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(3.2rem, 7vw, 5.75rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 0.98;
+  }
+
+  h1 span {
+    display: block;
+    margin-top: 0.8rem;
+    font-size: 0.42em;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+
+  .hero-text {
+    max-width: 650px;
+    margin: 1.5rem auto 0;
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    line-height: 1.7;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2.5rem;
+  }
+
+  .button-primary,
+  .button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 0.9rem 1.8rem;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .button-primary {
+    color: #ffffff;
+    background: var(--color-primary);
+    box-shadow: 0 12px 28px rgba(20, 45, 35, 0.32);
+  }
+
+  .button-primary:hover,
+  .button-primary:focus-visible {
+    color: #ffffff;
+    background: var(--color-primary-dark);
+    box-shadow: 0 16px 34px rgba(20, 45, 35, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .button-secondary {
+    gap: 0.55rem;
+    color: #ffffff;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.75);
+  }
+
+  .button-secondary:hover,
+  .button-secondary:focus-visible {
+    color: var(--color-primary-dark);
+    background: #ffffff;
+    border-color: #ffffff;
+    transform: translateY(-2px);
+  }
+
+  .play-icon {
+    font-size: 0.8rem;
+  }
+
+  .service-summary {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-top: 2rem;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: rgba(8, 18, 12, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+  .divider {
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 50%;
+  }
+
+  @media (max-width: 650px) {
+    .hero {
+      min-height: calc(100svh - 78px);
+      padding: 4.5rem 1.25rem;
+      background-position: center;
+    }
+
+    h1 {
+      font-size: clamp(2.85rem, 13vw, 4.25rem);
+    }
+
+    .hero-actions {
+      flex-direction: column;
+      width: min(100%, 330px);
+      margin-inline: auto;
+      margin-top: 2rem;
+    }
+
+    .button-primary,
+    .button-secondary {
+      width: 100%;
+    }
+
+    .service-summary {
+      display: flex;
+      border-radius: 1rem;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-top: 1.75rem;
+    }
+
+    .divider {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .button-primary,
+    .button-secondary {
+      transition: none;
+    }
+  }
+</style>

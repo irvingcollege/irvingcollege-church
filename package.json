@@ -12,6 +12,8 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.1.4"
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^7.1.4",
+    "decap-cms-app": "^3.15.1"
   }
 }

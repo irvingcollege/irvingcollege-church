@@ -1,0 +1,27 @@
+---
+interface Props {
+  id?: string;
+  soft?: boolean;
+}
+
+const { id, soft = false } = Astro.props;
+---
+
+<section
+  id={id}
+  class:list={[
+    "section",
+    { "section-soft": soft }
+  ]}
+>
+  <slot />
+</section>
+<style>
+  .section {
+    padding-block: var(--section-spacing);
+  }
+
+  .section-soft {
+    background: var(--color-background-soft);
+  }
+</style>

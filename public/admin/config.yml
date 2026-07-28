@@ -1,0 +1,99 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: public/images/uploads
+public_folder: /images/uploads
+
+site_url: https://irvingcollege.church
+display_url: https://irvingcollege.church
+
+collections:
+  - name: homepage
+    label: Homepage
+    files:
+      - name: homepage
+        label: Homepage Content
+        file: src/content/homepage/homepage.md
+        fields:
+          - label: Church Name
+            name: churchName
+            widget: string
+
+          - label: Hero
+            name: hero
+            widget: object
+            fields:
+              - { label: Eyebrow, name: eyebrow, widget: string }
+              - { label: Title, name: title, widget: string }
+              - { label: Subtitle, name: subtitle, widget: string }
+              - { label: Text, name: text, widget: text }
+              - { label: Image, name: image, widget: image }
+              - { label: Visit Button Text, name: visitButtonText, widget: string }
+              - { label: Sermon Button Text, name: sermonButtonText, widget: string }
+
+          - label: Plan Your Visit
+            name: planvisit
+            widget: object
+            fields:
+              - { label: Eyebrow, name: eyebrow, widget: string, required: false }
+              - { label: Heading, name: heading, widget: string, required: false }
+              - { label: Text, name: text, widget: text, required: false }
+              - { label: Image, name: image, widget: image, required: false }
+
+          - label: Mission
+            name: mission
+            widget: object
+            fields:
+              - { label: Eyebrow, name: eyebrow, widget: string }
+              - { label: Heading, name: heading, widget: string }
+              - { label: Text, name: text, widget: text }
+              - { label: Image, name: image, widget: image }
+              - { label: Button Text, name: buttonText, widget: string }
+
+          - label: Ministries
+            name: ministries
+            widget: object
+            fields:
+              - { label: Eyebrow, name: eyebrow, widget: string }
+              - { label: Heading, name: heading, widget: string }
+              - { label: Text, name: text, widget: text }
+              - label: Ministry Items
+                name: items
+                widget: list
+                fields:
+                  - { label: Title, name: title, widget: string }
+                  - { label: Text, name: text, widget: text }
+                  - { label: Image, name: image, widget: image }
+
+          - label: Giving
+            name: giving
+            widget: object
+            fields:
+              - { label: Eyebrow, name: eyebrow, widget: string }
+              - { label: Heading, name: heading, widget: string }
+              - { label: Text, name: text, widget: text }
+              - { label: Button Text, name: buttonText, widget: string }
+              - { label: Giving URL, name: url, widget: string }
+
+          - label: Contact
+            name: contact
+            widget: object
+            fields:
+              - { label: Address, name: address, widget: string }
+              - { label: City, State and ZIP, name: cityStateZip, widget: string }
+              - { label: Phone, name: phone, widget: string, required: false }
+              - { label: Email, name: email, widget: string, required: false }
+
+  - name: events
+    label: Events
+    folder: src/content/events
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Date, name: date, widget: datetime, date_format: "YYYY-MM-DD", time_format: false }
+      - { label: Time, name: time, widget: string }
+      - { label: Location, name: location, widget: string, required: false }
+      - { label: Description, name: description, widget: text }
+      - { label: Image, name: image, widget: image, required: false }

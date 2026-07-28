@@ -1,0 +1,75 @@
+---
+import Section from "./Section.astro";
+import Container from "./Container.astro";
+import SectionHeading from "./SectionHeading.astro";
+import Button from "./Button.astro";
+
+interface Props {
+  eyebrow: string;
+  heading: string;
+  text: string;
+  image: string;
+  buttonText: string;
+}
+
+const {
+  eyebrow,
+  heading,
+  text,
+  image,
+  buttonText,
+} = Astro.props;
+---
+
+<Section id="about">
+  <Container>
+    <div class="mission-grid">
+      <div class="mission-image">
+        <img src={image} alt="Irving College Baptist Church" />
+      </div>
+
+      <div class="mission-content">
+        <SectionHeading
+          eyebrow={eyebrow}
+          title={heading}
+          text={text}
+        />
+
+        <Button href="#visit">
+          {buttonText}
+        </Button>
+      </div>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .mission-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .mission-image img {
+    width: 100%;
+    border-radius: 1rem;
+    display: block;
+  }
+
+  .mission-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  @media (max-width: 900px) {
+    .mission-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .mission-image {
+      order: -1;
+    }
+  }
+</style>

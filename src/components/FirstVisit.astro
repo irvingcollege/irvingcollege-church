@@ -1,0 +1,114 @@
+---
+import Section from "./Section.astro";
+import Container from "./Container.astro";
+import SectionHeading from "./SectionHeading.astro";
+import Button from "./Button.astro";
+
+interface VisitItem {
+  title: string;
+  text: string;
+}
+
+interface Props {
+  eyebrow: string;
+  heading: string;
+  text: string;
+  items: VisitItem[];
+  buttonText: string;
+  directionsUrl: string;
+}
+
+const {
+  eyebrow,
+  heading,
+  text,
+  items,
+  buttonText,
+  directionsUrl,
+} = Astro.props;
+---
+
+<Section id="visit" soft>
+  <Container>
+    <SectionHeading
+      eyebrow={eyebrow}
+      title={heading}
+      text={text}
+    />
+
+    <div class="visit-grid">
+      {
+        items.map((item, index) => (
+          <article class="visit-card">
+            <span class="visit-number" aria-hidden="true">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+
+            <h3>{item.title}</h3>
+            <p>{item.text}</p>
+          </article>
+        ))
+      }
+    </div>
+
+    <div class="visit-action">
+      <Button href={directionsUrl}>
+        {buttonText}
+      </Button>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .visit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .visit-card {
+    position: relative;
+    padding: 2rem;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid rgba(20, 45, 35, 0.1);
+    border-radius: 1rem;
+    box-shadow: 0 1rem 2.5rem rgba(20, 45, 35, 0.06);
+  }
+
+  .visit-number {
+    display: inline-block;
+    margin-bottom: 1.25rem;
+    color: var(--color-primary);
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+
+  .visit-card h3 {
+    margin-bottom: 0.75rem;
+    font-size: 1.35rem;
+  }
+
+  .visit-card p {
+    margin: 0;
+  }
+
+  .visit-action {
+    display: flex;
+    justify-content: center;
+    margin-top: 2.5rem;
+  }
+
+  @media (max-width: 700px) {
+    .visit-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .visit-card {
+      padding: 1.5rem;
+    }
+  }
+</style>

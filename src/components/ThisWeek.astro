@@ -1,0 +1,263 @@
+---
+import Container from "./Container.astro";
+import Section from "./Section.astro";
+import SectionHeading from "./SectionHeading.astro";
+
+interface Service {
+  name: string;
+  day: string;
+  time: string;
+}
+
+interface Props {
+  id?: string;
+  eyebrow: string;
+  heading: string;
+  text: string;
+  services: Service[];
+  note: string;
+}
+
+const {
+  id = "visit",
+  eyebrow,
+  heading,
+  text,
+  services,
+  note,
+} = Astro.props;
+---
+
+<Section id={id} soft>
+  <Container>
+    <SectionHeading
+      eyebrow={eyebrow}
+      title={heading}
+      text={text}
+    />
+
+    <div class="service-grid">
+      {
+        services.map((service) => (
+          <article class="service-card">
+            <p class="service-day">{service.day}</p>
+            <h3>{service.name}</h3>
+            <p class="service-time">{service.time}</p>
+          </article>
+        ))
+      }
+    </div>
+
+    <div class="visitor-panel">
+      <div class="visitor-content">
+        <p class="visitor-eyebrow">Your First Visit</p>
+
+        <h3>Come as You Are</h3>
+
+        <ul class="visitor-list">
+          <li>
+            <span aria-hidden="true">✓</span>
+            Casual dress is always welcome
+          </li>
+
+          <li>
+            <span aria-hidden="true">✓</span>
+            Nursery is available during every service
+          </li>
+
+          <li>
+            <span aria-hidden="true">✓</span>
+            Friendly volunteers will help you find your way
+          </li>
+        </ul>
+
+        <p class="service-note">{note}</p>
+      </div>
+
+      <a class="visit-button" href="#contact">
+        Plan Your Visit
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .service-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .service-card {
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid rgba(20, 45, 35, 0.08);
+    border-radius: 1.5rem;
+    box-shadow: 0 12px 35px rgba(20, 45, 35, 0.08);
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .service-card:hover {
+    border-color: rgba(49, 92, 58, 0.18);
+    box-shadow: 0 24px 60px rgba(20, 45, 35, 0.14);
+    transform: translateY(-6px);
+  }
+
+  .service-day {
+    margin: 0 0 0.75rem;
+    color: var(--color-primary);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .service-card h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1.25rem;
+  }
+
+  .service-time {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .visitor-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+    margin-top: 2rem;
+    padding: clamp(2rem, 5vw, 3rem);
+    color: #ffffff;
+    background: var(--color-primary-dark);
+    border-radius: 1.75rem;
+    box-shadow: 0 18px 45px rgba(20, 45, 35, 0.16);
+  }
+
+  .visitor-content {
+    max-width: 680px;
+  }
+
+  .visitor-eyebrow {
+    margin: 0 0 0.55rem;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .visitor-content h3 {
+    margin: 0 0 1.25rem;
+    color: #ffffff;
+    font-size: clamp(1.75rem, 4vw, 2.4rem);
+  }
+
+  .visitor-list {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .visitor-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    line-height: 1.55;
+  }
+
+  .visitor-list span {
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: 0.05rem;
+    color: var(--color-primary-dark);
+    background: #ffffff;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .service-note {
+    margin: 1.25rem 0 0;
+    color: rgba(255, 255, 255, 0.82);
+    line-height: 1.6;
+  }
+
+  .visit-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 52px;
+    padding: 0.9rem 1.5rem;
+    color: var(--color-primary-dark);
+    background: #ffffff;
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .visit-button:hover,
+  .visit-button:focus-visible {
+    color: var(--color-primary-dark);
+    background: var(--color-background-soft);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 900px) {
+    .service-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .visitor-panel {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 2rem;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .service-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .service-card {
+      padding: 1.5rem;
+    }
+
+    .visitor-panel {
+      border-radius: 1.25rem;
+    }
+
+    .visit-button {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .service-card,
+    .visit-button {
+      transition: none;
+    }
+  }
+</style>

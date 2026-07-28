@@ -1,0 +1,261 @@
+---
+import Section from "./Section.astro";
+import Container from "./Container.astro";
+import SectionHeading from "./SectionHeading.astro";
+
+interface Ministry {
+  title: string;
+  text: string;
+  image: string;
+}
+
+interface Props {
+  eyebrow: string;
+  heading: string;
+  text: string;
+  items: Ministry[];
+}
+
+const { eyebrow, heading, text, items } = Astro.props;
+---
+
+<Section id="ministries">
+  <Container>
+    <SectionHeading
+      eyebrow={eyebrow}
+      title={heading}
+      text={text}
+    />
+
+    <div class="ministry-grid">
+      {
+        items.map((item, index) => (
+          <article class="ministry-card">
+            <div class="ministry-image">
+              <img
+                src={item.image}
+                alt={item.title}
+                width="900"
+                height="650"
+                loading="lazy"
+              />
+
+              <span class="ministry-number" aria-hidden="true">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+            </div>
+
+            <div class="ministry-content">
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+
+    <div class="ministry-action">
+      <div>
+        <p class="action-eyebrow">Not Sure Where to Start?</p>
+        <h3>We'll Help You Find Your Place</h3>
+        <p>
+          Whether you want to grow, serve, or help your family connect, there is
+          a place for you at Irving College Baptist Church.
+        </p>
+      </div>
+
+      <a class="connect-button" href="#contact">
+        Get Connected
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .ministry-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem;
+    margin-top: 3rem;
+  }
+
+  .ministry-card {
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid rgba(20, 45, 35, 0.08);
+    border-radius: 1.5rem;
+    box-shadow: 0 15px 40px rgba(20, 45, 35, 0.08);
+    transition:
+      border-color 0.25s ease,
+      box-shadow 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  .ministry-card:hover {
+    border-color: rgba(49, 92, 58, 0.2);
+    box-shadow: 0 24px 60px rgba(20, 45, 35, 0.14);
+    transform: translateY(-6px);
+  }
+
+  .ministry-image {
+    position: relative;
+    height: 280px;
+    overflow: hidden;
+    background: rgba(49, 92, 58, 0.08);
+  }
+
+  .ministry-image::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(8, 18, 12, 0.42),
+      transparent 55%
+    );
+    pointer-events: none;
+  }
+
+  .ministry-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.45s ease;
+  }
+
+  .ministry-card:hover .ministry-image img {
+    transform: scale(1.04);
+  }
+
+  .ministry-number {
+    position: absolute;
+    z-index: 1;
+    right: 1.25rem;
+    bottom: 1rem;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+
+  .ministry-content {
+    padding: 1.75rem;
+  }
+
+  .ministry-content h3 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+  }
+
+  .ministry-content p {
+    margin: 0;
+    line-height: 1.7;
+  }
+
+  .ministry-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+    margin-top: 2rem;
+    padding: clamp(2rem, 5vw, 3rem);
+    background: var(--color-background-soft);
+    border: 1px solid rgba(20, 45, 35, 0.08);
+    border-radius: 1.5rem;
+  }
+
+  .ministry-action > div {
+    max-width: 720px;
+  }
+
+  .action-eyebrow {
+    margin: 0 0 0.6rem;
+    color: var(--color-primary);
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .ministry-action h3 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.65rem, 4vw, 2.4rem);
+  }
+
+  .ministry-action p:not(.action-eyebrow) {
+    margin: 0;
+    line-height: 1.7;
+  }
+
+  .connect-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 52px;
+    padding: 0.9rem 1.5rem;
+    color: #ffffff;
+    background: var(--color-primary);
+    border-radius: 999px;
+    box-shadow: 0 10px 24px rgba(49, 92, 58, 0.22);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .connect-button:hover,
+  .connect-button:focus-visible {
+    color: #ffffff;
+    background: var(--color-primary-dark);
+    box-shadow: 0 14px 30px rgba(49, 92, 58, 0.3);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 800px) {
+    .ministry-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .ministry-action {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .ministry-grid {
+      gap: 1.25rem;
+      margin-top: 2.5rem;
+    }
+
+    .ministry-image {
+      height: 230px;
+    }
+
+    .ministry-content {
+      padding: 1.4rem;
+    }
+
+    .connect-button {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ministry-card,
+    .ministry-image img,
+    .connect-button {
+      transition: none;
+    }
+  }
+</style>

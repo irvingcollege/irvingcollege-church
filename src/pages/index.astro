@@ -1,17 +1,88 @@
 ---
+import { getEntry } from "astro:content";
 
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import Hero from "../components/Hero.astro";
+import PlanVisit from "../components/PlanVisit.astro";
+import Mission from "../components/Mission.astro";
+import Ministries from "../components/Ministries.astro";
+import LatestSermon from "../components/LatestSermon.astro";
+import UpcomingEvents from "../components/UpcomingEvents.astro";
+import Giving from "../components/Giving.astro";
+import Footer from "../components/Footer.astro";
+
+const site = await getEntry("homepage", "homepage");
+
+if (!site) {
+  throw new Error("Site settings could not be loaded.");
+}
+
+const {
+  churchName,
+  hero,
+  planvisit,
+  mission,
+  ministries,
+  giving,
+  contact,
+} = site.data;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout
+  title={churchName}
+  description="A Place of Hope for Warren County."
+>
+  <div id="top"></div>
+
+  <Header />
+
+  <main>
+    <Hero
+      eyebrow={hero.eyebrow}
+      title={hero.title}
+      subtitle={hero.subtitle}
+      text={hero.text}
+      image={hero.image}
+      visitButtonText={hero.visitButtonText}
+      sermonButtonText={hero.sermonButtonText}
+    />
+
+<PlanVisit />
+
+<Mission
+  eyebrow={mission.eyebrow}
+  heading={mission.heading}
+  text={mission.text}
+  image={mission.image}
+  buttonText={mission.buttonText}
+/>
+
+<Ministries
+  eyebrow={ministries.eyebrow}
+  heading={ministries.heading}
+  text={ministries.text}
+  items={ministries.items}
+/>
+
+<LatestSermon />
+
+<UpcomingEvents />
+
+<Giving
+  eyebrow={giving.eyebrow}
+  heading={giving.heading}
+  text={giving.text}
+  buttonText={giving.buttonText}
+  url={giving.url}
+/>
+
+  </main>
+  <Footer
+  churchName={churchName}
+  address={contact.address}
+  cityStateZip={contact.cityStateZip}
+  phone={contact.phone}
+  email={contact.email}
+/>
+</BaseLayout>

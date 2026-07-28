@@ -1,0 +1,38 @@
+---
+import Section from "./Section.astro";
+import Container from "./Container.astro";
+import SectionHeading from "./SectionHeading.astro";
+import Button from "./Button.astro";
+
+const {
+  eyebrow,
+  heading,
+  text,
+  buttonText,
+  url,
+} = Astro.props;
+---
+
+<Section id="giving" soft>
+  <Container>
+    <div class="giving">
+      <SectionHeading
+        eyebrow={eyebrow}
+        title={heading}
+        text={text}
+      />
+
+      <Button href={url}>
+        {buttonText}
+      </Button>
+    </div>
+  </Container>
+</Section>
+
+<style>
+.giving{
+  max-width:700px;
+  margin:0 auto;
+  text-align:center;
+}
+</style>

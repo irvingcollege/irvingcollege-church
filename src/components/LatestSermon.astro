@@ -1,0 +1,134 @@
+---
+import Section from "./Section.astro";
+import Container from "./Container.astro";
+import SectionHeading from "./SectionHeading.astro";
+import Button from "./Button.astro";
+
+const channelId = "UCzvfQahUozA6xOzMd3uQrCQ";
+const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+
+let sermon = {
+  title: "Watch Our Latest Sermon",
+  videoId: "l182YQXexKs",
+  published: "",
+  url: "https://www.youtube.com/watch?v=l182YQXexKs",
+  thumbnail: `https://i.ytimg.com/vi/hqdefault.jpg`,
+};
+
+try {
+  const response = await fetch(feedUrl);
+
+  if (!response.ok) {
+    throw new Error(`YouTube feed returned ${response.status}`);
+  }
+
+  const xml = await response.text();
+  const latestEntry = xml.match(/<entry>([\s\S]*?)<\/entry>/)?.[1];
+
+  if (latestEntry) {
+    const getValue = (tag: string) => {
+      const match = latestEntry.match(
+        new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`)
+      );
+
+      return match?.[1]
+        ?.replace("<![CDATA[", "")
+        .replace("]]>", "")
+        .trim();
+    };
+
+    const videoId = getValue("yt:videoId");
+    const title = getValue("title");
+    const published = getValue("published");
+
+    if (videoId && title) {
+      sermon = {
+        title,
+        videoId,
+        published,
+        url: `https://www.youtube.com/watch?v=${videoId}`,
+        thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+      };
+    }
+  }
+} catch (error) {
+  console.error("Could not load the latest YouTube sermon:", error);
+}
+
+const formattedDate = sermon?.published
+  ? new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(sermon.published))
+  : "";
+---
+
+{
+  sermon && (
+    <Section id="sermon" soft>
+      <Container>
+        <div class="sermon-layout">
+         <div class="sermon-video">
+  <iframe
+    src={`https://www.youtube.com/embed/${sermon.videoId}`}
+    title={sermon.title}
+    loading="lazy"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen
+  ></iframe>
+</div>
+
+          <div class="sermon-content">
+            <SectionHeading
+              eyebrow="Latest Sermon"
+              title={sermon.title}
+              text="Watch our latest message and discover the hope found in Jesus Christ."
+              align="left"
+            />
+
+            {formattedDate && <p class="sermon-date">{formattedDate}</p>}
+
+            <Button href={sermon.url}>
+              Watch Sermon
+            </Button>
+          </div>
+        </div>
+      </Container>
+    </Section>
+  )
+}
+
+<style>
+  .sermon-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+    align-items: center;
+    gap: clamp(2rem, 6vw, 5rem);
+  }
+
+  .sermon-video {
+  overflow: hidden;
+  border-radius: 1.25rem;
+  box-shadow: 0 1.5rem 3.5rem rgba(20,45,35,.16);
+}
+
+.sermon-video iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+
+  .sermon-date {
+    margin: -0.5rem 0 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 800px) {
+    .sermon-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
