@@ -16,7 +16,6 @@ const {
 <html lang="en">
   <head>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-    <meta charset="UTF-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1"
@@ -31,16 +30,23 @@ const {
 
   <body>
     <slot />
-    <script>
-  if (window.netlifyIdentity) {
-    window.netlifyIdentity.on("init", (user) => {
-      if (!user) {
-        window.netlifyIdentity.on("login", () => {
-          window.location.href = "/admin/";
-        });
-      }
-    });
+   <script is:inline>
+  const identityTokens = [
+    "invite_token",
+    "invitation_token",
+    "confirmation_token",
+    "recovery_token",
+    "email_change_token"
+  ];
+
+  const hasIdentityToken = identityTokens.some((token) =>
+    window.location.hash.includes(token)
+  );
+
+  if (hasIdentityToken && window.location.pathname !== "/admin/") {
+    window.location.replace(`/admin/${window.location.hash}`);
   }
+</script>
 </script>
   </body>
 </html>
