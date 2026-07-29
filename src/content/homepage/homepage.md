@@ -86,8 +86,8 @@ giving:
   buttonText: Give Online
   url: https://irvingcollege.churchcenter.com/giving
 contact:
-  address: 8931 Beersheba Hwy
-  cityStateZip: McMinnville, TN 37110
+  address: "8931 Beersheba Hwy"
+  cityStateZip: "McMinnville, TN 37110"
 ---
 =======
     - title: "Kids Ministry"
