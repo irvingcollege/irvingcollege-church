@@ -88,8 +88,7 @@ contact:
 giving:
   eyebrow: "Support the Mission"
   heading: "Give Online"
----
-  text: "Your generosity helps us share the hope of Jesus throughout Warren County and around the world."
-  buttonText: "Give Online"
+  text: "Your generosity helps us share the hope of Jesus, support ministries, and serve our community."
+  buttonText: "Give Now"
   url: "https://irvingcollege.churchcenter.com/giving"
 ---
