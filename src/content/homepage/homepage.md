@@ -65,6 +65,7 @@ ministries:
   text: Whether you're a child, student, or adult, there's a place for you to grow
     in Christ and connect with others.
   items:
+<<<<<<< HEAD
     - title: Kids Ministry
       text: Safe, fun, and Bible-centered classes where children learn about Jesus.
       image: /images/ministries/kids.jpg
@@ -88,3 +89,32 @@ contact:
   address: 8931 Beersheba Hwy
   cityStateZip: McMinnville, TN 37110
 ---
+=======
+    - title: "Kids Ministry"
+      text: "Safe, fun, and Bible-centered classes where children learn about Jesus."
+      image: "/images/ministries/kids.jpg"
+
+    - title: "Student Ministry"
+      text: "Helping students build a lifelong faith through worship, teaching, and community."
+      image: "/images/ministries/students.jpg"
+
+    - title: "Adult Bible Studies"
+      text: "Grow deeper in God's Word through Sunday School classes and Bible studies."
+      image: "/images/ministries/adults.jpg"
+
+    - title: "ServeM25"
+      text: "Serving our neighbors with the love of Christ through practical ministry."
+      image: "/images/ministries/servem25.jpg"
+
+contact:
+  address: "8931 Beersheba Hwy"
+  cityStateZip: "McMinnville, TN 37110"
+
+giving:
+  eyebrow: "Support the Mission"
+  heading: "Give Online"
+  text: "Your generosity helps us share the hope of Jesus throughout Warren County and around the world."
+  buttonText: "Give Online"
+  url: "https://irvingcollege.churchcenter.com/giving"
+---
+>>>>>>> 526d44f (Correct footer address and service time characters)

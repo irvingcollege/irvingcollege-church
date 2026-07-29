@@ -12,10 +12,7 @@ today.setHours(0, 0, 0, 0);
 
 const events = allEvents
   .filter((event) => event.data.date >= today)
-  .sort(
-    (a, b) =>
-      a.data.date.getTime() - b.data.date.getTime()
-  )
+  .sort((a, b) => a.data.date.getTime() - b.data.date.getTime())
   .slice(0, 3);
 
 const formatDate = (date: Date) => ({
@@ -32,7 +29,7 @@ const formatDate = (date: Date) => ({
   <Container>
     <SectionHeading
       eyebrow="Upcoming Events"
-      title="There’s Always Something Happening"
+      title="There's Always Something Happening"
       text="Join us for upcoming opportunities to worship, connect, and serve."
     />
 
@@ -55,7 +52,10 @@ const formatDate = (date: Date) => ({
                 )}
 
                 <div class="event-content">
-                  <div class="event-date" aria-label={`${date.month} ${date.day}`}>
+                  <div
+                    class="event-date"
+                    aria-label={`${date.month} ${date.day}`}
+                  >
                     <span class="month">{date.month}</span>
                     <span class="day">{date.day}</span>
                   </div>
@@ -102,84 +102,84 @@ const formatDate = (date: Date) => ({
     margin-top: 3rem;
   }
 
-.event-card {
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
-}
+  .event-card {
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
+  }
 
-.event-card:hover {
-  box-shadow: 0 1.5rem 3.5rem rgba(20, 45, 35, 0.13);
-  transform: translateY(-5px);
-}
+  .event-card:hover {
+    box-shadow: 0 1.5rem 3.5rem rgba(20, 45, 35, 0.13);
+    transform: translateY(-5px);
+  }
 
-.event-image {
-  overflow: hidden;
-}
+  .event-image {
+    overflow: hidden;
+  }
 
-.event-image img {
-  transition: transform 0.4s ease;
-}
+  .event-image img {
+    transition: transform 0.4s ease;
+  }
 
-.event-card:hover .event-image img {
-  transform: scale(1.04);
-}
+  .event-card:hover .event-image img {
+    transform: scale(1.04);
+  }
 
-.empty-events {
-  max-width: 760px;
-  margin: 3rem auto 0;
-  padding: clamp(2rem, 6vw, 4rem);
-  text-align: center;
-  background: #ffffff;
-  border: 1px solid rgba(20, 45, 35, 0.1);
-  border-radius: 1.5rem;
-  box-shadow: 0 1rem 2.5rem rgba(20, 45, 35, 0.08);
-}
+  .empty-events {
+    max-width: 760px;
+    margin: 3rem auto 0;
+    padding: clamp(2rem, 6vw, 4rem);
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid rgba(20, 45, 35, 0.1);
+    border-radius: 1.5rem;
+    box-shadow: 0 1rem 2.5rem rgba(20, 45, 35, 0.08);
+  }
 
-.empty-eyebrow {
-  margin: 0 0 0.75rem;
-  color: var(--color-primary);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
+  .empty-eyebrow {
+    margin: 0 0 0.75rem;
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
 
-.empty-events h3 {
-  margin: 0 0 1rem;
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-}
+  .empty-events h3 {
+    margin: 0 0 1rem;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  }
 
-.empty-events > p:not(.empty-eyebrow) {
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.7;
-}
+  .empty-events > p:not(.empty-eyebrow) {
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
 
-.visit-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
-  min-height: 52px;
-  margin-top: 1.5rem;
-  padding: 0.9rem 1.5rem;
-  color: #ffffff;
-  background: var(--color-primary);
-  border-radius: 999px;
-  font-weight: 700;
-  text-decoration: none;
-  transition:
-    background-color 0.2s ease,
-    transform 0.2s ease;
-}
+  .visit-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 52px;
+    margin-top: 1.5rem;
+    padding: 0.9rem 1.5rem;
+    color: #ffffff;
+    background: var(--color-primary);
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
 
-.visit-button:hover,
-.visit-button:focus-visible {
-  color: #ffffff;
-  background: var(--color-primary-dark);
-  transform: translateY(-2px);
-}
+  .visit-button:hover,
+  .visit-button:focus-visible {
+    color: #ffffff;
+    background: var(--color-primary-dark);
+    transform: translateY(-2px);
+  }
 
   .event-card {
     overflow: hidden;
