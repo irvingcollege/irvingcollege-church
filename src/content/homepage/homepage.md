@@ -58,38 +58,13 @@ firstVisit:
       text: You will be welcomed without being pressured or singled out. We are glad
         you are here.
   buttonText: Get Directions
-  directionsUrl: https://www.google.com/maps/search/?api=1&query=1115+Morrison+Street+McMinnville+TN+37110
+  directionsUrl: https://www.google.com/maps/search/?api=1&query=8931+Beersheba+Highway+McMinnville+TN+37110
 ministries:
   eyebrow: Ministries
   heading: Find Your Place
   text: Whether you're a child, student, or adult, there's a place for you to grow
     in Christ and connect with others.
   items:
-<<<<<<< HEAD
-    - title: Kids Ministry
-      text: Safe, fun, and Bible-centered classes where children learn about Jesus.
-      image: /images/ministries/kids.jpg
-    - title: Student Ministry
-      text: Helping students build a lifelong faith through worship, teaching, and
-        community.
-      image: /images/ministries/students.jpg
-    - title: Adult Bible Studies
-      text: Grow deeper in God's Word through Sunday School classes and Bible studies.
-      image: /images/ministries/adults.jpg
-    - title: ServeM25
-      text: Serving our neighbors with the love of Christ through practical ministry.
-      image: /images/ministries/servem25.jpg
-giving:
-  eyebrow: Support the Mission
-  heading: Give Online
-  text: Your generosity helps us share the hope of Jesus throughout Warren County.
-  buttonText: Give Online
-  url: https://irvingcollege.churchcenter.com/giving
-contact:
-  address: "8931 Beersheba Hwy"
-  cityStateZip: "McMinnville, TN 37110"
----
-=======
     - title: "Kids Ministry"
       text: "Safe, fun, and Bible-centered classes where children learn about Jesus."
       image: "/images/ministries/kids.jpg"
@@ -113,8 +88,8 @@ contact:
 giving:
   eyebrow: "Support the Mission"
   heading: "Give Online"
+---
   text: "Your generosity helps us share the hope of Jesus throughout Warren County and around the world."
   buttonText: "Give Online"
   url: "https://irvingcollege.churchcenter.com/giving"
 ---
->>>>>>> 526d44f (Correct footer address and service time characters)
