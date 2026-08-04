@@ -19,7 +19,7 @@ mission:
     or looking for a church home, you'll find a welcoming church family
     committed to biblical truth, authentic community, and sharing the hope of
     the Gospel throughout Warren County.
-  image: images/uploads/pastor-ryan-crips.jpg
+  image: images/uploads/pastor-ryan-crips-1448-x-850-px-.png
   buttonText: Plan Your Visit
 ministries:
   eyebrow: Ministries
