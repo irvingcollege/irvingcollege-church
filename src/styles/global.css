@@ -83,3 +83,10 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 90px;
 }
+#about {
+  padding-bottom: clamp(2.5rem, 4vw, 4rem);
+}
+
+#ministries {
+  padding-top: clamp(2.5rem, 4vw, 4rem);
+}
