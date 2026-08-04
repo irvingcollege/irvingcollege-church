@@ -53,6 +53,7 @@ giving:
 contact:
   address: 8931 Beersheba Hwy
   cityStateZip: McMinnville, TN 37110
+  email: icbcnextsteps@gmail.com
 thisWeek:
   eyebrow: Join Us This Week
   heading: We Can't Wait to Meet You
