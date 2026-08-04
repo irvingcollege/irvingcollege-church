@@ -38,7 +38,9 @@ ministries:
       text: Grow deeper in God's Word through Sunday School classes and Bible studies.
       image: /images/ministries/adults.jpg
     - title: ServeM25
-      text: Serving our neighbors with the love of Christ through practical ministry.
+      text: "The first Tuesday of every month we serve a hot meal at Three Rivers
+        Baptist Church to the homeless and underserved in Warren County. If you
+        would like to serve with us, please see Pastor Ryan for more info. "
       image: images/uploads/servem25.jpg
 giving:
   eyebrow: Support the Mission
