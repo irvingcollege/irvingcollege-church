@@ -39,12 +39,14 @@ ministries:
       image: /images/ministries/adults.jpg
     - title: ServeM25
       text: Serving our neighbors with the love of Christ through practical ministry.
-      image: /images/ministries/servem25.jpg
+      image: images/uploads/servem25.jpg
 giving:
-  eyebrow: "Support the Mission"
-  heading: "Your Generosity Makes Ministry Possible"
-  text: "Every gift helps us share the hope of Jesus throughout Warren County. Through your generosity, children hear the Gospel, families are cared for, and people are helped to grow in Christ."
-  buttonText: "Give Online"
+  eyebrow: Support the Mission
+  heading: Your Generosity Makes Ministry Possible
+  text: Every gift helps us share the hope of Jesus throughout Warren County.
+    Through your generosity, children hear the Gospel, families are cared for,
+    and people are helped to grow in Christ.
+  buttonText: Give Online
   url: https://irvingcollege.churchcenter.com/giving
 contact:
   address: 8931 Beersheba Hwy
@@ -54,7 +56,7 @@ thisWeek:
   heading: We Can't Wait to Meet You
   text: Whether you're new to church or looking for a church home, we'd love to
     welcome you. Come as you are and join us this week.
-  image: "/images/uploads/church-family.jpg"  
+  image: /images/uploads/church-family.jpg
   services:
     - name: Sunday School
       day: Sunday
@@ -75,7 +77,7 @@ firstVisit:
   heading: What to Expect
   text: Visiting a new church can feel unfamiliar. We want your first visit to
     Irving College Baptist Church to be comfortable, welcoming, and simple.
-  image: "/images/uploads/church-family.jpg"  
+  image: /images/uploads/church-family.jpg
   items:
     - title: Come As You Are
       text: You will find people dressed in everything from jeans to Sunday clothes.
