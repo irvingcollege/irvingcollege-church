@@ -41,11 +41,10 @@ ministries:
       text: Serving our neighbors with the love of Christ through practical ministry.
       image: /images/ministries/servem25.jpg
 giving:
-  eyebrow: Support the Mission
-  heading: Give Online
-  text: Your generosity helps us share the hope of Jesus, support ministries, and
-    serve our community.
-  buttonText: Give Now
+  eyebrow: "Support the Mission"
+  heading: "Your Generosity Makes Ministry Possible"
+  text: "Every gift helps us share the hope of Jesus throughout Warren County. Through your generosity, children hear the Gospel, families are cared for, and people are helped to grow in Christ."
+  buttonText: "Give Online"
   url: https://irvingcollege.churchcenter.com/giving
 contact:
   address: 8931 Beersheba Hwy
