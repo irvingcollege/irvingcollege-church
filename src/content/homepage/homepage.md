@@ -10,7 +10,7 @@ hero:
   visitButtonText: Plan Your Visit
   sermonButtonText: Watch Latest Sermon
 planvisit:
-  image: images/uploads/chatgpt-image-aug-4-2026-at-10_10_00-am.png
+  image: images/uploads/church-family.jpg
 mission:
   eyebrow: Our Mission
   heading: Helping People Find Hope in Jesus Christ
