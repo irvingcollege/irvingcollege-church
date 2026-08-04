@@ -320,27 +320,24 @@ const {
   }
 
   .action-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.85rem;
-  }
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
 
   .primary-button,
-  .secondary-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 50px;
-    padding: 0.85rem 1.5rem;
-    border: 2px solid #ffffff;
-    border-radius: 999px;
-    font-weight: 700;
-    text-decoration: none;
-    transition:
-      background-color 0.2s ease,
-      color 0.2s ease,
-      transform 0.2s ease;
-  }
+.secondary-button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 0.9rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 2px solid #ffffff;
+}
 
   .primary-button {
     color: var(--color-primary-dark);
