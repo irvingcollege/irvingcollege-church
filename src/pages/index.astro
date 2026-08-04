@@ -21,7 +21,7 @@ if (!site) {
 const {
   churchName,
   hero,
-  planvisit,
+  firstVisit,
   mission,
   ministries,
   giving,
@@ -48,7 +48,7 @@ const {
       sermonButtonText={hero.sermonButtonText}
     />
 
-<PlanVisit />
+<PlanVisit image={firstVisit?.image} />
 
 <Mission
   eyebrow={mission.eyebrow}

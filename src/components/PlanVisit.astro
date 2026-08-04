@@ -1,6 +1,13 @@
 ---
 import Container from "./Container.astro";
 import Section from "./Section.astro";
+interface Props {
+  image?: string;
+}
+
+const {
+  image = "/images/uploads/church-family.jpg",
+} = Astro.props;
 ---
 
 <Section id="visit" soft>
@@ -19,7 +26,7 @@ import Section from "./Section.astro";
     <div class="visit-feature">
       <div class="visit-photo">
         <img
-          src="/images/placeholders/church-family.jpg"
+          src={image}
           alt="Irving College Baptist Church congregation"
           width="1200"
           height="900"
