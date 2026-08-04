@@ -29,14 +29,14 @@ ministries:
   items:
     - title: Kids Ministry
       text: Safe, fun, and Bible-centered classes where children learn about Jesus.
-      image: /images/ministries/kids.jpg
+      image: images/uploads/1.png
     - title: Student Ministry
       text: Helping students build a lifelong faith through worship, teaching, and
         community.
-      image: /images/ministries/students.jpg
+      image: images/uploads/2.png
     - title: Adult Bible Studies
       text: Grow deeper in God's Word through Sunday School classes and Bible studies.
-      image: /images/ministries/adults.jpg
+      image: images/uploads/3.png
     - title: ServeM25
       text: "The first Tuesday of every month we serve a hot meal at Three Rivers
         Baptist Church to the homeless and underserved in Warren County. If you
