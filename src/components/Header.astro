@@ -112,6 +112,7 @@
     object-fit: contain;
   }
 
+  /* DESKTOP NAVIGATION */
   .navigation {
     display: flex;
     align-items: center;
@@ -124,7 +125,7 @@
 
   .navigation a {
     position: relative;
-    color: inherit;
+    color: var(--color-text);
     text-decoration: none;
     transition:
       color 0.25s ease,
@@ -173,7 +174,7 @@
 
   .visit-link:hover,
   .visit-link:focus-visible {
-    color: #ffffff;
+    color: #ffffff !important;
     background: var(--color-primary-dark);
     box-shadow: 0 12px 26px rgba(49, 92, 58, 0.3);
     transform: translateY(-2px);
@@ -210,6 +211,7 @@
     outline-offset: 2px;
   }
 
+  /* MOBILE */
   @media (max-width: 900px) {
     .header-inner {
       width: min(calc(100% - 2rem), 1400px);
@@ -225,30 +227,59 @@
     }
 
     .menu-button[aria-expanded="true"] {
-  color: var(--color-primary-dark);
-}
+      color: var(--color-primary-dark);
+    }
 
     .navigation {
       position: fixed;
       z-index: 1001;
-      inset: 0;
+
+      /* Keeps the actual header white */
+      top: 78px;
+      right: 0;
+      bottom: 0;
+      left: 0;
+
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1.75rem;
-      padding: 6rem 2rem 3rem;
-      color: var(--color-text);
-background: #ffffff;
-      font-size: 1.25rem;
+
+      gap: 1.5rem;
+      padding: 2rem;
+
+      /* Dims the page behind the menu */
+      background: rgba(20, 45, 35, 0.32);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+
+      font-size: 1.2rem;
+
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transform: translateY(-1rem);
+      transform: translateY(-0.75rem);
+
       transition:
         opacity 180ms ease,
         visibility 180ms ease,
         transform 180ms ease;
+    }
+
+    /* WHITE MENU CARD */
+    .navigation::before {
+      content: "";
+      position: absolute;
+      z-index: 0;
+
+      width: min(86vw, 360px);
+      height: 410px;
+
+      background: #ffffff;
+      border: 1px solid rgba(20, 45, 35, 0.08);
+      border-radius: 1.5rem;
+
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
     }
 
     .navigation.open {
@@ -258,28 +289,36 @@ background: #ffffff;
       transform: translateY(0);
     }
 
-    .navigation a:not(.visit-link)::after {
-  background: var(--color-primary);
-}
+    .navigation a {
+      z-index: 1;
+      color: var(--color-text);
+    }
 
-.navigation a:not(.visit-link):hover,
-.navigation a:not(.visit-link):focus-visible {
-  color: var(--color-primary);
-}
+    /* REMOVE THE LINES UNDER MOBILE LINKS */
+    .navigation a:not(.visit-link)::after {
+      display: none;
+    }
+
+    .navigation a:not(.visit-link):hover,
+    .navigation a:not(.visit-link):focus-visible {
+      color: var(--color-primary);
+      transform: none;
+    }
 
     .visit-link {
-  margin-top: 0.5rem;
-  padding-inline: 1.75rem;
-  color: #ffffff !important;
-  background: var(--color-primary);
-  box-shadow: 0 8px 20px rgba(49, 92, 58, 0.2);
-}
+      z-index: 1;
+      margin-top: 0.4rem;
+      padding-inline: 1.75rem;
+      color: #ffffff !important;
+      background: var(--color-primary);
+      box-shadow: 0 8px 20px rgba(49, 92, 58, 0.2);
+    }
 
-.visit-link:hover,
-.visit-link:focus-visible {
-  color: #ffffff !important;
-  background: var(--color-primary-dark);
-}
+    .visit-link:hover,
+    .visit-link:focus-visible {
+      color: #ffffff !important;
+      background: var(--color-primary-dark);
+    }
 
     .menu-button[aria-expanded="true"] span:nth-child(1) {
       transform: translateY(7px) rotate(45deg);
@@ -298,6 +337,11 @@ background: #ffffff;
     .logo img {
       height: 54px;
     }
+
+    .navigation::before {
+      width: min(90vw, 340px);
+      height: 390px;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -307,11 +351,5 @@ background: #ffffff;
     .menu-button span {
       transition: none;
     }
-  }
-</style>
-
-<style is:global>
-  body.menu-open {
-    overflow: hidden;
   }
 </style>
