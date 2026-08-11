@@ -2,7 +2,6 @@
 import Section from "./Section.astro";
 import Container from "./Container.astro";
 import SectionHeading from "./SectionHeading.astro";
-import Button from "./Button.astro";
 
 const channelId = "UCzvfQahUozA6xOzMd3uQrCQ";
 const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
@@ -12,7 +11,6 @@ let sermon = {
   videoId: "l182YQXexKs",
   published: "",
   url: "https://www.youtube.com/watch?v=l182YQXexKs",
-  thumbnail: `https://i.ytimg.com/vi/hqdefault.jpg`,
 };
 
 try {
@@ -23,39 +21,45 @@ try {
   }
 
   const xml = await response.text();
-  const latestEntry = xml.match(/<entry>([\s\S]*?)<\/entry>/)?.[1];
 
-  if (latestEntry) {
-    const getValue = (tag: string) => {
-      const match = latestEntry.match(
-        new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`)
-      );
+  // Get the first video entry in the YouTube feed
+  const entryMatch = xml.match(/<entry>([\s\S]*?)<\/entry>/);
 
-      return match?.[1]
-        ?.replace("<![CDATA[", "")
-        .replace("]]>", "")
-        .trim();
-    };
+  if (entryMatch) {
+    const entry = entryMatch[1];
 
-    const videoId = getValue("yt:videoId");
-    const title = getValue("title");
-    const published = getValue("published");
+    const videoId =
+      entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1];
+
+    const title =
+      entry.match(/<title>([\s\S]*?)<\/title>/)?.[1];
+
+    const published =
+      entry.match(/<published>(.*?)<\/published>/)?.[1];
 
     if (videoId && title) {
       sermon = {
-        title,
-        videoId,
-        published,
-        url: `https://www.youtube.com/watch?v=${videoId}`,
-        thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        title: title
+          .replace("<![CDATA[", "")
+          .replace("]]>", "")
+          .trim(),
+
+        videoId: videoId.trim(),
+
+        published: published?.trim() || "",
+
+        url: `https://www.youtube.com/watch?v=${videoId.trim()}`,
       };
     }
   }
 } catch (error) {
-  console.error("Could not load the latest YouTube sermon:", error);
+  console.error(
+    "Could not load latest YouTube sermon:",
+    error
+  );
 }
 
-const formattedDate = sermon?.published
+const formattedDate = sermon.published
   ? new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
@@ -64,40 +68,45 @@ const formattedDate = sermon?.published
   : "";
 ---
 
-{
-  sermon && (
-    <Section id="sermon" soft>
-      <Container>
-        <div class="sermon-layout">
-         <div class="sermon-video">
-  <iframe
-    src={`https://www.youtube.com/embed/${sermon.videoId}`}
-    title={sermon.title}
-    loading="lazy"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen
-  ></iframe>
-</div>
+<Section id="sermon" soft>
+  <Container>
+    <div class="sermon-layout">
 
-          <div class="sermon-content">
-            <SectionHeading
-              eyebrow="Latest Sermon"
-              title={sermon.title}
-              text="Watch our latest message and discover the hope found in Jesus Christ."
-              align="left"
-            />
+      <div class="sermon-video">
+        <iframe
+          src={`https://www.youtube.com/embed/${sermon.videoId}`}
+          title={sermon.title}
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
 
-            {formattedDate && <p class="sermon-date">{formattedDate}</p>}
+      <div class="sermon-content">
+        <SectionHeading
+          eyebrow="Latest Sermon"
+          title={sermon.title}
+          text="Watch our latest message and discover the hope found in Jesus Christ."
+          align="left"
+        />
 
-            <Button href={sermon.url}>
-              Watch Sermon
-            </Button>
-          </div>
-        </div>
-      </Container>
-    </Section>
-  )
-}
+        {formattedDate && (
+          <p class="sermon-date">{formattedDate}</p>
+        )}
+
+        <a
+          class="watch-button"
+          href={sermon.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Watch on YouTube
+        </a>
+      </div>
+
+    </div>
+  </Container>
+</Section>
 
 <style>
   .sermon-layout {
@@ -108,22 +117,45 @@ const formattedDate = sermon?.published
   }
 
   .sermon-video {
-  overflow: hidden;
-  border-radius: 1.25rem;
-  box-shadow: 0 1.5rem 3.5rem rgba(20,45,35,.16);
-}
+    overflow: hidden;
+    border-radius: 1.25rem;
+    box-shadow: 0 1.5rem 3.5rem rgba(20, 45, 35, 0.16);
+  }
 
-.sermon-video iframe {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border: 0;
-}
+  .sermon-video iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+  }
 
   .sermon-date {
     margin: -0.5rem 0 1.5rem;
     font-size: 0.95rem;
     font-weight: 700;
+  }
+
+  .watch-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 0.9rem 1.6rem;
+    color: #ffffff;
+    background: var(--color-primary);
+    border-radius: 999px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .watch-button:hover,
+  .watch-button:focus-visible {
+    color: #ffffff;
+    background: var(--color-primary-dark);
+    transform: translateY(-2px);
   }
 
   @media (max-width: 800px) {
