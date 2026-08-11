@@ -225,8 +225,8 @@
     }
 
     .menu-button[aria-expanded="true"] {
-      color: #ffffff;
-    }
+  color: var(--color-primary-dark);
+}
 
     .navigation {
       position: fixed;
@@ -238,8 +238,8 @@
       justify-content: center;
       gap: 1.75rem;
       padding: 6rem 2rem 3rem;
-      color: #ffffff;
-      background: var(--color-primary-dark);
+      color: var(--color-text);
+background: #ffffff;
       font-size: 1.25rem;
       opacity: 0;
       visibility: hidden;
@@ -259,27 +259,27 @@
     }
 
     .navigation a:not(.visit-link)::after {
-      background: #ffffff;
-    }
+  background: var(--color-primary);
+}
 
-    .navigation a:not(.visit-link):hover,
-    .navigation a:not(.visit-link):focus-visible {
-      color: #ffffff;
-    }
+.navigation a:not(.visit-link):hover,
+.navigation a:not(.visit-link):focus-visible {
+  color: var(--color-primary);
+}
 
     .visit-link {
-      margin-top: 0.5rem;
-      padding-inline: 1.75rem;
-      background: #ffffff;
-      color: var(--color-primary-dark) !important;
-      box-shadow: none;
-    }
+  margin-top: 0.5rem;
+  padding-inline: 1.75rem;
+  color: #ffffff !important;
+  background: var(--color-primary);
+  box-shadow: 0 8px 20px rgba(49, 92, 58, 0.2);
+}
 
-    .visit-link:hover,
-    .visit-link:focus-visible {
-      color: var(--color-primary-dark);
-      background: var(--color-background-soft);
-    }
+.visit-link:hover,
+.visit-link:focus-visible {
+  color: #ffffff !important;
+  background: var(--color-primary-dark);
+}
 
     .menu-button[aria-expanded="true"] span:nth-child(1) {
       transform: translateY(7px) rotate(45deg);
