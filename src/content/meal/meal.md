@@ -1,6 +1,6 @@
 ---
 showMenu: true
-title: Wednesday Night Meal
-menu: Breakfast
+title: Breakfast
+menu: We hope you will join us.
 note: ""
 ---
