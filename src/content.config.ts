@@ -101,8 +101,21 @@ const events = defineCollection({
   }),
 });
 
+const meal = defineCollection({
+  loader: glob({
+    pattern: "**/*.{md,mdx}",
+    base: "./src/content/meal",
+  }),
+  schema: z.object({
+    showMenu: z.boolean().default(true),
+    title: z.string(),
+    menu: z.string(),
+    note: z.string().optional(),
+  }),
+});
+
 export const collections = {
   homepage,
   events,
+  meal,
 };
-
