@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
+    "@netlify/blobs": "^10.7.13",
     "astro": "^7.1.4",
     "decap-cms-app": "^3.15.1"
   }

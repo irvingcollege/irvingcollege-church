@@ -1,0 +1,50 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Wednesday Meal RSVP | Irving College Baptist Church" description="RSVP for Wednesday's meal.">
+  <header class="meal-header"><a href="/" aria-label="Church home"><img src="/images/1080logo.jpg" alt="Irving College Baptist Church" /></a></header>
+  <main class="meal-page">
+    <section class="meal-card">
+      <div class="intro"><p class="eyebrow">Wednesday Night Supper</p><h1>Will your family be eating with us?</h1><p class="date" data-date>Loading this week’s date…</p><p class="deadline" data-deadline></p></div>
+      <form data-form>
+        <input type="hidden" name="eventDate" data-event-date />
+        <fieldset><legend>Your answer</legend><div class="choices">
+          <label><input type="radio" name="attending" value="yes" required /><span>Yes, we’ll be there</span></label>
+          <label><input type="radio" name="attending" value="no" required /><span>No, not this week</span></label>
+        </div></fieldset>
+        <div class="field" data-number hidden><label for="numberEating">How many people will be eating?</label><input id="numberEating" name="numberEating" type="number" min="1" max="30" inputmode="numeric" /></div>
+        <div class="field"><label for="familyName">Family name</label><input id="familyName" name="familyName" maxlength="80" autocomplete="name" placeholder="Example: The Smith Family" required /><small>Submitting again with the same family name updates your response.</small></div>
+        <p class="error" data-error role="alert" hidden></p><button class="submit" type="submit">Submit RSVP</button>
+      </form>
+      <div class="success" data-success hidden tabindex="-1"><span>✓</span><h2>You’re all set!</h2><p data-success-text></p><button type="button" data-change>Change my response</button></div>
+    </section>
+  </main>
+  <footer><strong>Irving College Baptist Church</strong><br />A Place of Hope for Warren County</footer>
+</BaseLayout>
+<script>
+  const form = document.querySelector('[data-form]'); const number = document.querySelector('[data-number]');
+  const numberInput = document.querySelector('#numberEating'); const error = document.querySelector('[data-error]');
+  const submit = form.querySelector('[type="submit"]'); const success = document.querySelector('[data-success]');
+  const showError = (text) => { error.textContent = text; error.hidden = false; };
+  fetch('/.netlify/functions/meal-rsvp?action=info').then(r => { if (!r.ok) throw Error(); return r.json(); }).then(week => {
+    document.querySelector('[data-event-date]').value = week.eventDate;
+    document.querySelector('[data-date]').textContent = `Wednesday, ${week.eventLabel} at 5:30 PM`;
+    document.querySelector('[data-deadline]').textContent = `Please respond by ${week.deadlineLabel}.`;
+  }).catch(() => { showError('We could not load this week’s RSVP. Please refresh.'); submit.disabled = true; });
+  form.querySelectorAll('[name="attending"]').forEach(input => input.addEventListener('change', () => {
+    const yes = form.elements.attending.value === 'yes'; number.hidden = !yes; numberInput.required = yes; if (!yes) numberInput.value = '';
+  }));
+  form.addEventListener('submit', async event => {
+    event.preventDefault(); error.hidden = true; submit.disabled = true; submit.textContent = 'Submitting…';
+    try {
+      const response = await fetch('/.netlify/functions/meal-rsvp', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+      const result = await response.json(); if (!response.ok) { if (result.refresh) location.reload(); throw Error(result.error); }
+      form.hidden = true; success.hidden = false; success.querySelector('[data-success-text]').textContent = result.message; success.focus();
+    } catch (e) { showError(e.message || 'We could not save your response. Please try again.'); }
+    finally { submit.disabled = false; submit.textContent = 'Submit RSVP'; }
+  });
+  document.querySelector('[data-change]').addEventListener('click', () => { success.hidden = true; form.hidden = false; document.querySelector('#familyName').focus(); });
+</script>
+<style>
+  .meal-header{display:flex;justify-content:center;padding:1rem;background:#fff;border-bottom:1px solid var(--color-border)}.meal-header img{width:auto;height:72px}.meal-page{min-height:calc(100vh - 210px);padding:clamp(2.5rem,6vw,5.5rem) 1rem;background:linear-gradient(rgba(20,51,29,.82),rgba(20,51,29,.91)),url('/images/uploads/church-family.jpg') center/cover fixed}.meal-card{width:min(100%,680px);margin:auto;padding:clamp(1.5rem,4vw,3rem);background:rgba(255,255,255,.97);border-radius:1.5rem;box-shadow:0 24px 70px #0004}.intro{text-align:center}.eyebrow{margin:0 0 .5rem;color:var(--color-accent);font-weight:700;letter-spacing:.11em;text-transform:uppercase}.intro h1{max-width:14ch;margin:0 auto .65rem;color:var(--color-primary-dark);font:700 clamp(2rem,6vw,3.2rem)/1.08 var(--font-heading)}.date{margin:0;font-weight:700}.deadline{margin:.25rem 0 2rem;color:var(--color-text-soft);font-size:.95rem}form{display:grid;gap:1.4rem}fieldset{margin:0;padding:0;border:0}legend,.field label{display:block;margin-bottom:.55rem;font-weight:700}.choices{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}.choices label{display:flex;min-height:76px;align-items:center;gap:.65rem;padding:1rem;background:var(--color-background-soft);border:2px solid transparent;border-radius:1rem;cursor:pointer}.choices label:has(input:checked){background:#e8f1e9;border-color:var(--color-primary)}.choices input{width:1.25rem;height:1.25rem;accent-color:var(--color-primary)}.choices span{font-weight:700;line-height:1.25}.field input{width:100%;min-height:54px;padding:.8rem 1rem;border:1.5px solid #bfc8c1;border-radius:.7rem;font:inherit}.field small{display:block;margin-top:.35rem;color:var(--color-text-soft);line-height:1.4}.submit{min-height:56px;padding:.85rem;color:#fff;background:var(--color-primary);border:0;border-radius:999px;font:700 1rem var(--font-heading);cursor:pointer}.submit:disabled{opacity:.65}.error{margin:0;padding:.8rem;color:#8a271f;background:#fff0ed;border-radius:.65rem}.success{text-align:center;outline:none}.success>span{display:grid;width:64px;height:64px;place-items:center;margin:auto;color:#fff;background:var(--color-primary);border-radius:50%;font-size:2rem}.success h2{margin:.8rem 0 .3rem;color:var(--color-primary-dark);font:700 2rem var(--font-heading)}.success button{color:var(--color-primary);background:none;border:0;text-decoration:underline;font-weight:700;cursor:pointer}footer{padding:1.3rem;color:#ffffffd1;background:var(--color-primary-dark);text-align:center;line-height:1.5}footer strong{color:#fff}@media(max-width:540px){.choices{grid-template-columns:1fr}.meal-page{background-attachment:scroll}.meal-header img{height:60px}}
+</style>
