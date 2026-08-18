@@ -36,6 +36,44 @@ function currentWeek() {
   return { eventDate: iso(meal), eventLabel: label(meal), deadlineLabel: `Tuesday, ${label(deadline, false)} at noon` };
 }
 
+function resultsWeek() {
+  const p = localParts();
+
+  const weekday = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  }[p.weekday];
+
+  // Results always stay with the upcoming/current Wednesday,
+  // even after Tuesday's noon RSVP cutoff.
+  const days = (3 - weekday + 7) % 7;
+
+  const meal = addDays(
+    Number(p.year),
+    Number(p.month),
+    Number(p.day),
+    days
+  );
+
+  const deadline = addDays(
+    meal.year,
+    meal.month,
+    meal.day,
+    -1
+  );
+
+  return {
+    eventDate: iso(meal),
+    eventLabel: label(meal),
+    deadlineLabel: `Tuesday, ${label(deadline, false)} at noon`,
+  };
+}
+
 function authorized(request) {
   const expected = process.env.MEAL_RESULTS_PASSWORD ?? "";
   const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
@@ -56,13 +94,35 @@ export default async (request) => {
 
   if (request.method === "GET" && action === "info") return json(week);
   if (request.method === "GET" && action === "results") {
-    if (!authorized(request)) return json({ error: "Incorrect results password." }, 401);
-    const responses = (await responsesFor(week.eventDate)).sort((a, b) => a.familyName.localeCompare(b.familyName));
-    const yes = responses.filter((item) => item.attending);
-    return json({ ...week, responses, totalFamilies: responses.length, attendingFamilies: yes.length,
-      notAttendingFamilies: responses.length - yes.length,
-      totalMeals: yes.reduce((sum, item) => sum + item.numberEating, 0) });
+  if (!authorized(request)) {
+    return json({ error: "Incorrect results password." }, 401);
   }
+
+  const resultsMeal = resultsWeek();
+
+  const responses = (
+    await responsesFor(resultsMeal.eventDate)
+  ).sort((a, b) =>
+    a.familyName.localeCompare(b.familyName)
+  );
+
+  const yes = responses.filter(
+    (item) => item.attending
+  );
+
+  return json({
+    ...resultsMeal,
+    responses,
+    totalFamilies: responses.length,
+    attendingFamilies: yes.length,
+    notAttendingFamilies:
+      responses.length - yes.length,
+    totalMeals: yes.reduce(
+      (sum, item) => sum + item.numberEating,
+      0
+    ),
+  });
+}
   if (request.method !== "POST") return json({ error: "Method not allowed." }, 405);
 
   let body;
