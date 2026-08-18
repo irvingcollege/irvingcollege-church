@@ -72,7 +72,6 @@ function resultsWeek() {
     eventLabel: label(meal),
     deadlineLabel: `Tuesday, ${label(deadline, false)} at 4:00 PM,
   };
-}
 
 function authorized(request) {
   const expected = process.env.MEAL_RESULTS_PASSWORD ?? "";
@@ -83,7 +82,7 @@ function authorized(request) {
 
 async function responsesFor(eventDate) {
   const dataStore = store();
-  const { blobs } = await dataStore.list({ prefix: `${eventDate}/` });
+  const { blobs } = await dataStore.list({ prefix: `${eventDate}/`});
   return (await Promise.all(blobs.map(({ key }) => dataStore.get(key, { type: "json" })))).filter(Boolean);
 }
 
