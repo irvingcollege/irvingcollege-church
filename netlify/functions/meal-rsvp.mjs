@@ -68,10 +68,10 @@ function resultsWeek() {
   );
 
   return {
-    eventDate: iso(meal),
-    eventLabel: label(meal),
-    deadlineLabel: `Tuesday, ${label(deadline, false)} at 4:00 PM,
-  };
+  eventDate: iso(meal),
+  eventLabel: label(meal),
+  deadlineLabel: `Tuesday, ${label(deadline, false)} at 4:00 PM`,
+};
 
 function authorized(request) {
   const expected = process.env.MEAL_RESULTS_PASSWORD ?? "";
