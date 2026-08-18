@@ -29,11 +29,11 @@ function currentWeek() {
   const p = localParts();
   const weekday = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[p.weekday];
   let days = (3 - weekday + 7) % 7;
-  if (weekday === 2 && Number(p.hour) >= 12) days = 8;
+  if (weekday === 2 && Number(p.hour) >= 16) days = 8;
   else if (weekday >= 3 && days === 0) days = 7;
   const meal = addDays(Number(p.year), Number(p.month), Number(p.day), days);
   const deadline = addDays(meal.year, meal.month, meal.day, -1);
-  return { eventDate: iso(meal), eventLabel: label(meal), deadlineLabel: `Tuesday, ${label(deadline, false)} at noon` };
+  return { eventDate: iso(meal), eventLabel: label(meal), deadlineLabel: `Tuesday, ${label(deadline, false)} at 4:00 PM` };
 }
 
 function resultsWeek() {
@@ -70,7 +70,7 @@ function resultsWeek() {
   return {
     eventDate: iso(meal),
     eventLabel: label(meal),
-    deadlineLabel: `Tuesday, ${label(deadline, false)} at noon`,
+    deadlineLabel: `Tuesday, ${label(deadline, false)} at 4:00 PM,
   };
 }
 
