@@ -50,7 +50,7 @@ function resultsWeek() {
   }[p.weekday];
 
   // Results always stay with the upcoming/current Wednesday,
-  // even after Tuesday's noon RSVP cutoff.
+  // even after Tuesday's 4:00 PM RSVP cutoff.
   const days = (3 - weekday + 7) % 7;
 
   const meal = addDays(
@@ -68,10 +68,11 @@ function resultsWeek() {
   );
 
   return {
-  eventDate: iso(meal),
-  eventLabel: label(meal),
-  deadlineLabel: `Tuesday, ${label(deadline, false)} at 4:00 PM`,
-};
+    eventDate: iso(meal),
+    eventLabel: label(meal),
+    deadlineLabel: `Tuesday, ${label(deadline, false)} at 4:00 PM`,
+  };
+}
 
 function authorized(request) {
   const expected = process.env.MEAL_RESULTS_PASSWORD ?? "";
