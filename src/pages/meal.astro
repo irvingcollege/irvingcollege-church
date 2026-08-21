@@ -4,6 +4,14 @@ import { getEntry } from "astro:content";
 
 const mealEntry = await getEntry("meal", "meal");
 const weeklyMeal = mealEntry?.data;
+
+const mealImage = weeklyMeal?.image
+  ? weeklyMeal.image.startsWith("http")
+    ? weeklyMeal.image
+    : weeklyMeal.image.startsWith("/")
+      ? weeklyMeal.image
+      : `/${weeklyMeal.image}`
+  : "";
 ---
 <BaseLayout title="Wednesday Meal RSVP | Irving College Baptist Church" description="RSVP for Wednesday's meal.">
   <header class="meal-header"><a href="/" aria-label="Church home"><img src="/images/1080logo.jpg" alt="Irving College Baptist Church" /></a></header>
@@ -12,10 +20,10 @@ const weeklyMeal = mealEntry?.data;
       <div class="intro"><p class="eyebrow">Wednesday Night Supper</p><h1>Will your family be eating with us?</h1><p class="date" data-date>Loading this week’s date…</p><p class="deadline" data-deadline></p></div>
       {weeklyMeal?.showMenu && (
         <aside class="weekly-menu" aria-labelledby="weekly-menu-title">
-        {weeklyMeal.image && (
+        {mealImage && (
   <img
     class="meal-image"
-    src={weeklyMeal.image}
+    src={mealImage}
     alt={weeklyMeal.title}
     loading="lazy"
   />
