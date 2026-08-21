@@ -18,6 +18,10 @@ collections:
         fields:
           - { label: Show Menu, name: showMenu, widget: boolean, default: true }
           - { label: Meal Title, name: title, widget: string, hint: "Example: Spaghetti Dinner" }
+          - label: "Meal Image"
+            name: "image"
+            widget: "image"
+            required: false
           - { label: Menu Details, name: menu, widget: text, hint: "Example: Spaghetti, salad, garlic bread, and dessert" }
           - { label: Optional Note, name: note, widget: text, required: false, hint: "Example: Donations are appreciated." }
 

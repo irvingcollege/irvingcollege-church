@@ -109,6 +109,7 @@ const meal = defineCollection({
   schema: z.object({
     showMenu: z.boolean().default(true),
     title: z.string(),
+    image: z.string().optional(),
     menu: z.string(),
     note: z.string().optional(),
   }),
