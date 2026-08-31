@@ -1,20 +1,429 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-<BaseLayout title="Meal RSVP Results | Irving College Baptist Church" description="Private meal totals.">
-  <main class="page"><section class="shell"><a href="/">← Church website</a><header><p>Wednesday Night Supper</p><h1>Meal RSVP Results</h1></header>
-    <form data-login><label for="password">Results password</label><div><input id="password" type="password" required /><button>View results</button></div><p data-login-error hidden></p></form>
-    <section data-results hidden><div class="toolbar"><div><h2 data-date></h2><p data-deadline></p></div><button data-refresh>Refresh</button></div>
-      <div class="totals"><article class="primary"><strong data-meals>0</strong><span>Total meals</span></article><article><strong data-yes>0</strong><span>Families eating</span></article><article><strong data-no>0</strong><span>Not eating</span></article><article><strong data-count>0</strong><span>Total responses</span></article></div>
-      <div class="table-card"><div class="table-title"><h2>Family responses</h2><button data-print>Print list</button></div><div class="scroll"><table><thead><tr><th>Family</th><th>Response</th><th>Meals</th></tr></thead><tbody></tbody></table></div><p data-empty hidden>No families have responded yet.</p></div>
-    </section></section></main>
+
+<BaseLayout
+  title="Meal RSVP Results | Irving College Baptist Church"
+  description="Private meal totals."
+>
+  <main class="page">
+    <section class="shell">
+      <a href="/">← Church website</a>
+
+      <header>
+        <p>Wednesday Night Supper</p>
+        <h1>Meal RSVP Results</h1>
+      </header>
+
+      <form data-login>
+        <label for="password">Results password</label>
+        <div>
+          <input id="password" type="password" required />
+          <button>View results</button>
+        </div>
+        <p data-login-error hidden></p>
+      </form>
+
+      <section data-results hidden>
+        <div class="toolbar">
+          <div>
+            <h2 data-date></h2>
+            <p data-deadline></p>
+          </div>
+          <button data-refresh>Refresh</button>
+        </div>
+
+        <div class="totals">
+          <article class="primary">
+            <strong data-meals>0</strong>
+            <span>Total meals</span>
+          </article>
+
+          <article>
+            <strong data-yes>0</strong>
+            <span>Families eating</span>
+          </article>
+
+          <article>
+            <strong data-no>0</strong>
+            <span>Not eating</span>
+          </article>
+
+          <article>
+            <strong data-count>0</strong>
+            <span>Total responses</span>
+          </article>
+        </div>
+
+        <div class="table-card">
+          <div class="table-title">
+            <h2>Responses</h2>
+            <button data-print>Print list</button>
+          </div>
+
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Response</th>
+                  <th>Meals</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <p data-empty hidden>
+            No one has responded yet.
+          </p>
+        </div>
+      </section>
+    </section>
+  </main>
 </BaseLayout>
+
 <script>
-  const login=document.querySelector('[data-login]'),results=document.querySelector('[data-results]'),loginError=document.querySelector('[data-login-error]');let password=sessionStorage.getItem('mealResultsPassword')||'';
-  const text=(s,v)=>document.querySelector(s).textContent=String(v);
-  async function load(){const r=await fetch('/.netlify/functions/meal-rsvp?action=results',{headers:{Authorization:`Bearer ${password}`}});const d=await r.json();if(!r.ok)throw Error(d.error);login.hidden=true;results.hidden=false;text('[data-date]',`Wednesday, ${d.eventLabel}`);text('[data-deadline]',`Deadline: ${d.deadlineLabel}`);text('[data-meals]',d.totalMeals);text('[data-yes]',d.attendingFamilies);text('[data-no]',d.notAttendingFamilies);text('[data-count]',d.totalFamilies);const body=document.querySelector('tbody');body.replaceChildren();document.querySelector('[data-empty]').hidden=d.responses.length>0;d.responses.forEach(item=>{const row=document.createElement('tr');[item.familyName,item.attending?'Yes':'No',item.attending?item.numberEating:'—'].forEach((value,i)=>{const cell=document.createElement('td');cell.textContent=value;if(i===1)cell.className=item.attending?'yes':'no';row.append(cell)});body.append(row)})}
-  login.addEventListener('submit',async e=>{e.preventDefault();password=document.querySelector('#password').value;loginError.hidden=true;try{await load();sessionStorage.setItem('mealResultsPassword',password)}catch(err){loginError.textContent=err.message;loginError.hidden=false;sessionStorage.removeItem('mealResultsPassword')}});document.querySelector('[data-refresh]').addEventListener('click',load);document.querySelector('[data-print]').addEventListener('click',()=>print());if(password)load().catch(()=>sessionStorage.removeItem('mealResultsPassword'));
+  const login = document.querySelector('[data-login]');
+  const results = document.querySelector('[data-results]');
+  const loginError = document.querySelector('[data-login-error]');
+
+  let password =
+    sessionStorage.getItem('mealResultsPassword') || '';
+
+  const text = (selector, value) => {
+    document.querySelector(selector).textContent =
+      String(value);
+  };
+
+  async function load() {
+    const response = await fetch(
+      '/.netlify/functions/meal-rsvp?action=results',
+      {
+        headers: {
+          Authorization: `Bearer ${password}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw Error(data.error);
+    }
+
+    login.hidden = true;
+    results.hidden = false;
+
+    text(
+      '[data-date]',
+      `Wednesday, ${data.eventLabel}`
+    );
+
+    text(
+      '[data-deadline]',
+      `Deadline: ${data.deadlineLabel}`
+    );
+
+    text('[data-meals]', data.totalMeals);
+    text('[data-yes]', data.attendingFamilies);
+    text('[data-no]', data.notAttendingFamilies);
+    text('[data-count]', data.totalFamilies);
+
+    const body = document.querySelector('tbody');
+    body.replaceChildren();
+
+    document.querySelector('[data-empty]').hidden =
+      data.responses.length > 0;
+
+    data.responses.forEach((item) => {
+      const row = document.createElement('tr');
+
+      const values = [
+        item.displayName || item.familyName || 'Unknown',
+        item.attending ? 'Yes' : 'No',
+        item.attending ? item.numberEating : '—'
+      ];
+
+      values.forEach((value, index) => {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+
+        if (index === 1) {
+          cell.className =
+            item.attending ? 'yes' : 'no';
+        }
+
+        row.append(cell);
+      });
+
+      body.append(row);
+    });
+  }
+
+  login.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    password =
+      document.querySelector('#password').value;
+
+    loginError.hidden = true;
+
+    try {
+      await load();
+
+      sessionStorage.setItem(
+        'mealResultsPassword',
+        password
+      );
+    } catch (error) {
+      loginError.textContent = error.message;
+      loginError.hidden = false;
+
+      sessionStorage.removeItem(
+        'mealResultsPassword'
+      );
+    }
+  });
+
+  document
+    .querySelector('[data-refresh]')
+    .addEventListener('click', load);
+
+  document
+    .querySelector('[data-print]')
+    .addEventListener('click', () => print());
+
+  if (password) {
+    load().catch(() =>
+      sessionStorage.removeItem(
+        'mealResultsPassword'
+      )
+    );
+  }
 </script>
+
 <style>
-  .page{min-height:100vh;padding:clamp(2rem,5vw,5rem) 1rem;background:var(--color-background-soft)}.shell{width:min(100%,1050px);margin:auto}.shell>a{color:var(--color-primary);font-weight:700;text-decoration:none}header{margin:2rem 0}header p{margin:0;color:var(--color-accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase}header h1{margin:.25rem 0;color:var(--color-primary-dark);font:700 clamp(2rem,5vw,3.5rem)/1.1 var(--font-heading)}form,.table-card{padding:clamp(1.25rem,3vw,2rem);background:#fff;border:1px solid var(--color-border);border-radius:1rem;box-shadow:var(--shadow-soft)}form label{display:block;margin-bottom:.5rem;font-weight:700}form>div{display:flex;gap:.75rem}input{flex:1;min-width:0;padding:.8rem;border:1px solid var(--color-border);border-radius:.65rem;font:inherit}button{padding:.8rem 1.2rem;color:#fff;background:var(--color-primary);border:0;border-radius:.65rem;font-weight:700;cursor:pointer}[data-login-error]{color:#8a271f}.toolbar,.table-title{display:flex;align-items:center;justify-content:space-between;gap:1rem}.toolbar{margin:2rem 0 1rem}.toolbar h2,.table-title h2{margin:0;color:var(--color-primary-dark);font-family:var(--font-heading)}.toolbar p{margin:0;color:var(--color-text-soft)}.toolbar button,.table-title button{color:var(--color-primary);background:transparent;border:1px solid var(--color-primary)}.totals{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1rem}.totals article{display:flex;min-height:140px;flex-direction:column;justify-content:center;padding:1rem;background:#fff;border:1px solid var(--color-border);border-radius:1rem;text-align:center}.totals strong{color:var(--color-primary-dark);font:700 2.5rem var(--font-heading)}.totals span{color:var(--color-text-soft);font-size:.9rem}.totals .primary{background:var(--color-primary);border-color:var(--color-primary)}.totals .primary strong,.totals .primary span{color:#fff}.table-title{margin-bottom:1rem}.scroll{overflow:auto}table{width:100%;border-collapse:collapse}th,td{padding:.8rem .6rem;border-bottom:1px solid var(--color-border);text-align:left}th{color:var(--color-text-soft);font-size:.82rem;text-transform:uppercase}th:last-child,td:last-child{text-align:right}td.yes{color:var(--color-primary);font-weight:700}td.no{color:var(--color-text-soft)}[data-empty]{text-align:center;color:var(--color-text-soft)}@media(max-width:760px){.totals{grid-template-columns:1fr 1fr}.toolbar,form>div{align-items:stretch;flex-direction:column}}@media print{.shell>a,.toolbar button,[data-print],form{display:none!important}.page{padding:0;background:#fff}.totals article{min-height:90px}}
+  .page{
+    min-height:100vh;
+    padding:clamp(2rem,5vw,5rem) 1rem;
+    background:var(--color-background-soft);
+  }
+
+  .shell{
+    width:min(100%,1050px);
+    margin:auto;
+  }
+
+  .shell>a{
+    color:var(--color-primary);
+    font-weight:700;
+    text-decoration:none;
+  }
+
+  header{
+    margin:2rem 0;
+  }
+
+  header p{
+    margin:0;
+    color:var(--color-accent);
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  header h1{
+    margin:.25rem 0;
+    color:var(--color-primary-dark);
+    font:700 clamp(2rem,5vw,3.5rem)/1.1 var(--font-heading);
+  }
+
+  form,
+  .table-card{
+    padding:clamp(1.25rem,3vw,2rem);
+    background:#fff;
+    border:1px solid var(--color-border);
+    border-radius:1rem;
+    box-shadow:var(--shadow-soft);
+  }
+
+  form label{
+    display:block;
+    margin-bottom:.5rem;
+    font-weight:700;
+  }
+
+  form>div{
+    display:flex;
+    gap:.75rem;
+  }
+
+  input{
+    flex:1;
+    min-width:0;
+    padding:.8rem;
+    border:1px solid var(--color-border);
+    border-radius:.65rem;
+    font:inherit;
+  }
+
+  button{
+    padding:.8rem 1.2rem;
+    color:#fff;
+    background:var(--color-primary);
+    border:0;
+    border-radius:.65rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  [data-login-error]{
+    color:#8a271f;
+  }
+
+  .toolbar,
+  .table-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+  }
+
+  .toolbar{
+    margin:2rem 0 1rem;
+  }
+
+  .toolbar h2,
+  .table-title h2{
+    margin:0;
+    color:var(--color-primary-dark);
+    font-family:var(--font-heading);
+  }
+
+  .toolbar p{
+    margin:0;
+    color:var(--color-text-soft);
+  }
+
+  .toolbar button,
+  .table-title button{
+    color:var(--color-primary);
+    background:transparent;
+    border:1px solid var(--color-primary);
+  }
+
+  .totals{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1rem;
+    margin-bottom:1rem;
+  }
+
+  .totals article{
+    display:flex;
+    min-height:140px;
+    flex-direction:column;
+    justify-content:center;
+    padding:1rem;
+    background:#fff;
+    border:1px solid var(--color-border);
+    border-radius:1rem;
+    text-align:center;
+  }
+
+  .totals strong{
+    color:var(--color-primary-dark);
+    font:700 2.5rem var(--font-heading);
+  }
+
+  .totals span{
+    color:var(--color-text-soft);
+    font-size:.9rem;
+  }
+
+  .totals .primary{
+    background:var(--color-primary);
+    border-color:var(--color-primary);
+  }
+
+  .totals .primary strong,
+  .totals .primary span{
+    color:#fff;
+  }
+
+  .table-title{
+    margin-bottom:1rem;
+  }
+
+  .scroll{
+    overflow:auto;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  th,
+  td{
+    padding:.8rem .6rem;
+    border-bottom:1px solid var(--color-border);
+    text-align:left;
+  }
+
+  th{
+    color:var(--color-text-soft);
+    font-size:.82rem;
+    text-transform:uppercase;
+  }
+
+  th:last-child,
+  td:last-child{
+    text-align:right;
+  }
+
+  td.yes{
+    color:var(--color-primary);
+    font-weight:700;
+  }
+
+  td.no{
+    color:var(--color-text-soft);
+  }
+
+  [data-empty]{
+    text-align:center;
+    color:var(--color-text-soft);
+  }
+
+  @media(max-width:760px){
+    .totals{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .toolbar,
+    form>div{
+      align-items:stretch;
+      flex-direction:column;
+    }
+  }
+
+  @media print{
+    .shell>a,
+    .toolbar button,
+    [data-print],
+    form{
+      display:none!important;
+    }
+
+    .page{
+      padding:0;
+      background:#fff;
+    }
+
+    .totals article{
+      min-height:90px;
+    }
+  }
 </style>
