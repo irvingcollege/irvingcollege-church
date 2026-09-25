@@ -1,7 +1,7 @@
 ---
-showMenu: true
-title: BBQ Chicken Sandwiches
-image: images/uploads/wednesday.png
-menu: We hope you will join us for supper and Bible Study.
+showMenu: false
+title: Pizza at Irving College Gym at 5:30 p.m.
+image: ""
+menu: We will finish up around 7:00 p.m.
 note: ""
 ---
