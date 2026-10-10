@@ -1,7 +1,7 @@
 ---
 showMenu: false
 title: Taco Bar
-image: images/uploads/original-size-irvingcollege-1920-x-1080-px-25.png
+image: ""
 menu: "We hope you will join us this Wednesday. "
 note: ""
 ---
