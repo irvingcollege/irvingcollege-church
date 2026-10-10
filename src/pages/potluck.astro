@@ -13,7 +13,7 @@ const potluck = potluckEntry?.data ?? {
 };
 
 const eventDate = potluck.date
-  ? new Date(`${potluck.date}T12:00:00`).toLocaleDateString("en-US", {
+  ? new Date(potluck.date).toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
