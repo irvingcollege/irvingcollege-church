@@ -1,7 +1,7 @@
 ---
 showMenu: false
-title: Pizza at Irving College Gym at 5:30 p.m.
-image: ""
-menu: We will finish up around 7:00 p.m.
+title: Taco Bar
+image: images/uploads/original-size-irvingcollege-1920-x-1080-px-25.png
+menu: "We hope you will join us this Wednesday. "
 note: ""
 ---
