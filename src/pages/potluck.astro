@@ -1,0 +1,473 @@
+
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getEntry } from "astro:content";
+
+const potluckEntry = await getEntry("potluck", "potluck");
+
+const potluck = potluckEntry?.data ?? {
+  title: "Church Potluck",
+  date: "",
+  description: "Bring your favorite dish and enjoy a meal together!",
+  acceptingSignups: true,
+};
+
+const eventDate = potluck.date
+  ? new Date(`${potluck.date}T12:00:00`).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    })
+  : "";
+---
+---
+
+<BaseLayout
+  title="Church Potluck | Irving College Baptist Church"
+  description="Sign up to bring a dish to our church potluck."
+>
+  <header class="potluck-header">
+    <a href="/" aria-label="Church home">
+      <img src="/images/1080logo.jpg" alt="Irving College Baptist Church" />
+    </a>
+  </header>
+
+  <main class="potluck-page">
+    <div class="intro">
+      <p class="eyebrow">FOOD &bull; FELLOWSHIP &bull; FAMILY</p>
+      <h1>{potluck.title}</h1>
+{eventDate && <p class="event-date">{eventDate}</p>}
+<p>{potluck.description}</p>
+    </div>
+
+    <div class="potluck-grid">
+      <section class="panel" aria-labelledby="signup-heading">
+        <h2 id="signup-heading">What are you bringing?</h2>
+        <p class="muted">Enter your name and the dishes you plan to bring.</p>
+
+        <div class="existing" data-existing hidden>
+          <p>You have a saved signup on this device.</p>
+          <button type="button" class="secondary" data-edit-saved>
+            Edit my signup
+          </button>
+          <button type="button" class="text-button" data-new-signup>
+            Create a different signup
+          </button>
+        </div>
+
+{
+  !potluck.acceptingSignups && (
+    <p class="closed-notice">
+      Signups for this potluck are currently closed.
+    </p>
+  )
+}
+
+        <form data-form hidden={!potluck.acceptingSignups}>
+          <div class="names">
+            <div class="field">
+              <label for="firstName">First name</label>
+              <input id="firstName" name="firstName" maxlength="50" required autocomplete="given-name" />
+            </div>
+            <div class="field">
+              <label for="lastName">Last name</label>
+              <input id="lastName" name="lastName" maxlength="50" required autocomplete="family-name" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>What are you bringing?</label>
+            <div class="items" data-items>
+              <div class="item-row">
+                <input name="item" maxlength="120" placeholder="Example: Mac & Cheese" required />
+                <button type="button" class="remove" data-remove aria-label="Remove item">&times;</button>
+              </div>
+            </div>
+            <button type="button" class="add-button" data-add>
+              + Add another item
+            </button>
+          </div>
+
+          <p class="error" data-error role="alert" hidden></p>
+
+          <button class="submit" type="submit" data-submit>
+            Save My Dishes
+          </button>
+        </form>
+
+        <div class="confirmation" data-confirmation hidden>
+          <h3>You're signed up!</h3>
+          <p>Your dishes have been added to the potluck list.</p>
+          <p class="muted">Save this private edit code if you want to update your dishes from another device.</p>
+          <div class="code-box">
+            <div class="edit-details">
+  <p><strong>Signup ID:</strong> <span data-signup-id></span></p>
+  <p><strong>Edit code:</strong> <code data-edit-code></code></p>
+</div>
+            <button type="button" class="secondary" data-copy>Copy code</button>
+          </div>
+          <button type="button" class="secondary" data-edit-now>Edit my dishes</button>
+          <button type="button" class="text-button" data-add-person>Add another person</button>
+        </div>
+
+        <div class="recover">
+          <button type="button" class="text-button" data-show-recover>
+            Already signed up on another device?
+          </button>
+          <form data-recover hidden>
+            <label for="recoverId">Signup ID</label>
+            <input id="recoverId" required />
+            <label for="recoverCode">Private edit code</label>
+            <input id="recoverCode" required />
+            <button type="submit" class="secondary">Load my signup</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel list-panel" aria-labelledby="list-heading">
+        <div class="list-header">
+          <div>
+            <h2 id="list-heading">What Everyone's Bringing</h2>
+            <p class="muted">Automatically updates every 15 seconds.</p>
+          </div>
+          <button type="button" class="secondary" data-refresh>Refresh</button>
+        </div>
+
+        <p class="counts" data-counts>Loading signups…</p>
+        <div data-list aria-live="polite"></div>
+        <p class="error" data-list-error hidden></p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <strong>Irving College Baptist Church</strong>
+    <p>A Place of Hope for Warren County</p>
+  </footer>
+</BaseLayout>
+
+<script>
+  const API = "/.netlify/functions/potluck";
+  const STORAGE_KEY = "icbc-potluck-edit";
+
+  const form = document.querySelector('[data-form]');
+  const itemsContainer = document.querySelector('[data-items]');
+  const error = document.querySelector('[data-error]');
+  const confirmation = document.querySelector('[data-confirmation]');
+  const existing = document.querySelector('[data-existing]');
+  const recoverForm = document.querySelector('[data-recover]');
+
+  let editCredentials = null;
+  let latestEntries = [];
+
+  function savedCredentials() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    } catch {
+      return null;
+    }
+  }
+
+  function showError(message) {
+    error.textContent = message;
+    error.hidden = false;
+  }
+
+  function addItem(value = "") {
+    if (itemsContainer.children.length >= 15) return;
+
+    const row = document.createElement("div");
+    row.className = "item-row";
+
+    const input = document.createElement("input");
+    input.name = "item";
+    input.maxLength = 120;
+    input.required = true;
+    input.placeholder = "Example: Green Beans";
+    input.value = value;
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove";
+    remove.textContent = "\u00D7";
+    remove.setAttribute("aria-label", "Remove item");
+
+    remove.addEventListener("click", () => {
+      if (itemsContainer.children.length > 1) {
+        row.remove();
+      }
+    });
+
+    row.append(input, remove);
+    itemsContainer.append(row);
+  }
+
+  document.querySelector('[data-add]').addEventListener('click', () => addItem());
+
+  document.querySelectorAll('[data-remove]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (itemsContainer.children.length > 1) {
+        button.closest('.item-row').remove();
+      }
+    });
+  });
+
+  function showForm() {
+    confirmation.hidden = true;
+    form.hidden = false;
+    existing.hidden = true;
+    error.hidden = true;
+  }
+
+  function startNew() {
+    editCredentials = null;
+    form.reset();
+    itemsContainer.replaceChildren();
+    addItem();
+    showForm();
+  }
+
+  function editSignup(credentials) {
+    const entry = latestEntries.find(item => item.id === credentials.id);
+
+    if (!entry) {
+      showError("We couldn't find this signup in the current list.");
+      return;
+    }
+
+    editCredentials = credentials;
+    form.elements.firstName.value = entry.firstName;
+    form.elements.lastName.value = entry.lastName;
+
+    itemsContainer.replaceChildren();
+    entry.items.forEach(addItem);
+
+    showForm();
+    document.querySelector('#firstName').focus();
+  }
+
+  document.querySelector('[data-edit-saved]').addEventListener('click', () => {
+    const credentials = savedCredentials();
+    if (credentials) editSignup(credentials);
+  });
+
+  document.querySelector('[data-new-signup]').addEventListener('click', startNew);
+  document.querySelector('[data-add-person]').addEventListener('click', startNew);
+
+  document.querySelector('[data-edit-now]').addEventListener('click', () => {
+    if (editCredentials) editSignup(editCredentials);
+  });
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    error.hidden = true;
+
+    const submit = document.querySelector('[data-submit]');
+    submit.disabled = true;
+    submit.textContent = "Saving…";
+
+    const body = {
+      firstName: form.elements.firstName.value.trim(),
+      lastName: form.elements.lastName.value.trim(),
+      items: [...itemsContainer.querySelectorAll('input')].map(input => input.value.trim()).filter(Boolean),
+    };
+
+    const action = editCredentials ? "update" : "signup";
+
+    if (editCredentials) {
+      body.id = editCredentials.id;
+      body.editCode = editCredentials.editCode;
+    }
+
+    try {
+      const response = await fetch(`${API}?action=${action}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not save signup.");
+
+      if (action === "signup") {
+        editCredentials = { id: result.id, editCode: result.editCode };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(editCredentials));
+      }
+
+      document.querySelector('[data-signup-id]').textContent = editCredentials.id;
+      document.querySelector('[data-edit-code]').textContent = editCredentials.editCode;
+      form.hidden = true;
+      confirmation.hidden = false;
+      await loadList();
+    } catch (err) {
+      showError(err.message || "Please try again.");
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Save My Dishes";
+    }
+  });
+
+  document.querySelector('[data-copy]').addEventListener('click', async () => {
+    const credentials = editCredentials;
+    if (!credentials) return;
+    await navigator.clipboard.writeText(
+      `Signup ID: ${credentials.id}\nEdit code: ${credentials.editCode}`
+    );
+  });
+
+  document.querySelector('[data-show-recover]').addEventListener('click', () => {
+    recoverForm.hidden = !recoverForm.hidden;
+  });
+
+  recoverForm.addEventListener('submit', async event => {
+  event.preventDefault();
+
+  const credentials = {
+    id: document.querySelector('#recoverId').value.trim(),
+    editCode: document.querySelector('#recoverCode').value.trim(),
+  };
+
+  try {
+    const response = await fetch(`${API}?action=lookup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to retrieve signup.");
+    }
+
+    // Add the verified signup to the current list
+    latestEntries = [
+      ...latestEntries.filter(entry => entry.id !== result.entry.id),
+      result.entry,
+    ];
+
+    editCredentials = credentials;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(credentials));
+
+    editSignup(credentials);
+    recoverForm.hidden = true;
+
+  } catch (err) {
+    showError(err.message || "Unable to retrieve signup.");
+  }
+});
+
+  async function loadList() {
+    try {
+      const response = await fetch(`${API}?action=list`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not load the potluck list.");
+
+      const data = await response.json();
+      latestEntries = data.entries;
+
+      document.querySelector('[data-counts]').textContent =
+        `${data.totalSignups} signed up • ${data.totalItems} dishes`;
+
+      const list = document.querySelector('[data-list]');
+      list.replaceChildren();
+
+      if (!data.entries.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "No dishes yet. Be the first to sign up!";
+        list.append(empty);
+      }
+
+      data.entries.forEach(entry => {
+        const card = document.createElement("article");
+        card.className = "entry";
+
+        const name = document.createElement("h3");
+        name.textContent = `${entry.firstName} ${entry.lastName}`;
+
+        const ul = document.createElement("ul");
+        entry.items.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          ul.append(li);
+        });
+
+        card.append(name, ul);
+        list.append(card);
+      });
+
+      document.querySelector('[data-list-error]').hidden = true;
+    } catch (err) {
+      const listError = document.querySelector('[data-list-error]');
+      listError.textContent = err.message;
+      listError.hidden = false;
+    }
+  }
+
+  document.querySelector('[data-refresh]').addEventListener('click', loadList);
+
+  const saved = savedCredentials();
+  if (saved) {
+    existing.hidden = false;
+  }
+
+  loadList();
+  setInterval(loadList, 15000);
+</script>
+
+<style>
+  .potluck-header{display:flex;justify-content:center;padding:1rem;background:#fff}
+  .potluck-header img{height:72px;width:auto}
+  .potluck-page{min-height:80vh;padding:3rem 1rem 5rem;background:#f4f7f3}
+  .intro{text-align:center;margin:0 auto 2.5rem}
+  .eyebrow{color:var(--color-accent);font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+  .intro h1{margin:.3rem 0;color:var(--color-primary-dark);font:700 clamp(2.4rem,5vw,4rem) var(--font-heading)}
+  .intro>p:last-child{color:var(--color-text-soft)}
+  .potluck-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;width:min(100%,1200px);margin:auto;align-items:start}
+  .panel{padding:clamp(1.25rem,3vw,2rem);background:#fff;border:1px solid var(--color-border);border-radius:1.2rem;box-shadow:var(--shadow-soft)}
+  .panel h2{margin:0;color:var(--color-primary-dark);font:700 1.55rem var(--font-heading)}
+  .muted{color:var(--color-text-soft);line-height:1.5}
+  form{display:grid;gap:1.2rem;margin-top:1.5rem}
+  .names{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+  .field label,.recover label{display:block;margin-bottom:.45rem;font-weight:700}
+  .field input,.recover input{width:100%;min-width:0;min-height:50px;padding:.75rem;border:1px solid #bfc8c1;border-radius:.65rem;font:inherit}
+  .items{display:grid;gap:.65rem}
+  .item-row{display:flex;gap:.5rem}
+  .item-row input{flex:1}
+  button{font:inherit;cursor:pointer}
+  .remove{width:44px;border:0;border-radius:.65rem;background:#fcebe8;color:#9d3028;font-size:1.6rem}
+  .add-button,.text-button{padding:.65rem 0;border:0;background:none;color:var(--color-primary);font-weight:700;text-align:left}
+  .submit{min-height:54px;padding:.8rem 1rem;border:0;border-radius:999px;background:var(--color-primary);color:#fff;font-weight:800}
+  .submit:disabled{opacity:.6}
+  .secondary{padding:.6rem .85rem;border:1px solid var(--color-primary);border-radius:.6rem;background:#fff;color:var(--color-primary);font-weight:700}
+  .error{padding:.7rem;background:#fff0ed;color:#8a271f;border-radius:.6rem}
+  .existing{padding:1rem;margin:1rem 0;background:#eff5ef;border-radius:.8rem}
+  .confirmation{padding:1rem 0}
+  .confirmation h3{color:var(--color-primary-dark);font-size:1.5rem}
+  .code-box{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;padding:1rem;background:#f3f6ef;border-radius:.7rem;overflow-wrap:anywhere}
+  .recover{margin-top:1.5rem;border-top:1px solid var(--color-border);padding-top:1rem}
+  .recover form{margin-top:.8rem}
+  .list-header{display:flex;justify-content:space-between;gap:1rem;align-items:start}
+  .counts{padding:.85rem 0;font-weight:700;color:var(--color-primary)}
+  .entry{padding:1rem 0;border-top:1px solid var(--color-border)}
+  .entry h3{margin:0 0 .45rem;color:var(--color-primary-dark)}
+  .entry ul{margin:0;padding-left:1.3rem;line-height:1.8}
+  footer{padding:1.5rem;background:var(--color-primary-dark);color:#fff;text-align:center}
+  footer p{margin:.3rem 0 0}
+  @media(max-width:800px){.potluck-grid{grid-template-columns:1fr}}
+  @media(max-width:540px){.names{grid-template-columns:1fr}.potluck-header img{height:60px}.list-header{flex-direction:column}}
+.event-date {
+  font-weight: 700;
+  color: #245a47;
+  margin: 0.5rem 0;
+}
+
+.closed-notice {
+  padding: 1rem;
+  background: #fff3dc;
+  border-radius: 0.7rem;
+  color: #684b15;
+  font-weight: 700;
+}
+</style>

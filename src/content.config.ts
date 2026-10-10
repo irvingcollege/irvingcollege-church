@@ -115,8 +115,23 @@ const meal = defineCollection({
   }),
 });
 
+const potluck = defineCollection({
+  loader: glob({
+    pattern: "**/*.{md,mdx}",
+    base: "./src/content/potluck",
+  }),
+
+  schema: z.object({
+    title: z.string(),
+    date: z.string(),
+    description: z.string(),
+    acceptingSignups: z.boolean().default(true),
+  }),
+});
+
 export const collections = {
   homepage,
   events,
   meal,
+  potluck,
 };

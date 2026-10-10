@@ -1,0 +1,351 @@
+
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Potluck Results | Irving College Baptist Church"
+  description="Potluck signup administration."
+>
+  <main class="admin-page">
+    <div class="container">
+      <div class="heading">
+        <a href="/potluck" class="back">← Back to Potluck Signup</a>
+        <h1>Potluck Results</h1>
+        <p>Irving College Baptist Church</p>
+      </div>
+
+      <section class="panel" id="login-panel">
+        <h2>Administrator Login</h2>
+        <p>Enter your administrator password to view and manage signups.</p>
+
+        <form id="login-form">
+          <label for="password">Admin password</label>
+          <input id="password" type="password" required autocomplete="current-password" />
+          <button type="submit" class="primary">View Results</button>
+        </form>
+
+        <p id="login-error" class="error" role="alert" hidden></p>
+      </section>
+
+      <section id="results-panel" hidden>
+        <div class="toolbar">
+          <button type="button" id="refresh" class="secondary">Refresh Results</button>
+          <button type="button" id="print" class="secondary">Print List</button>
+          <button type="button" id="logout" class="secondary">Log Out</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span id="total-signups">0</span>
+            <p>People Signed Up</p>
+          </div>
+          <div class="stat">
+            <span id="total-items">0</span>
+            <p>Total Dishes</p>
+          </div>
+        </div>
+
+        <section class="panel">
+          <h2>Signup List</h2>
+          <p id="results-message" class="muted"></p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Bringing</th>
+                  <th class="actions-column">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="entries"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="edit-panel" hidden>
+          <h2>Edit Signup</h2>
+
+          <form id="edit-form">
+            <div class="names">
+              <div>
+                <label for="edit-first">First Name</label>
+                <input id="edit-first" maxlength="50" required />
+              </div>
+              <div>
+                <label for="edit-last">Last Name</label>
+                <input id="edit-last" maxlength="50" required />
+              </div>
+            </div>
+
+            <label for="edit-items">Dishes (one per line)</label>
+            <textarea id="edit-items" rows="6" required></textarea>
+
+            <div class="edit-buttons">
+              <button type="submit" class="primary">Save Changes</button>
+              <button type="button" id="cancel-edit" class="secondary">Cancel</button>
+            </div>
+          </form>
+
+          <p id="edit-error" class="error" role="alert" hidden></p>
+        </section>
+      </section>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  const API = "/.netlify/functions/potluck";
+  const PASSWORD_KEY = "icbc-potluck-admin";
+
+  const loginPanel = document.querySelector("#login-panel");
+  const resultsPanel = document.querySelector("#results-panel");
+  const loginForm = document.querySelector("#login-form");
+  const entriesBody = document.querySelector("#entries");
+  const editPanel = document.querySelector("#edit-panel");
+  const editForm = document.querySelector("#edit-form");
+
+  let password = sessionStorage.getItem(PASSWORD_KEY) || "";
+  let entries = [];
+  let editingId = null;
+
+  function showLoginError(message) {
+    const el = document.querySelector("#login-error");
+    el.textContent = message;
+    el.hidden = false;
+  }
+
+  async function apiRequest(action, method = "GET", body = null) {
+    const options = {
+      method,
+      headers: {
+        Authorization: `Bearer ${password}`,
+      },
+      cache: "no-store",
+    };
+
+    if (body) {
+      options.headers["Content-Type"] = "application/json";
+      options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(`${API}?action=${action}`, options);
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Request failed.");
+    }
+
+    return result;
+  }
+
+  function renderEntries() {
+    entriesBody.replaceChildren();
+
+    if (!entries.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 3;
+      cell.textContent = "No potluck signups yet.";
+      row.append(cell);
+      entriesBody.append(row);
+      return;
+    }
+
+    entries.forEach(entry => {
+      const row = document.createElement("tr");
+
+      const name = document.createElement("td");
+      name.textContent = `${entry.firstName} ${entry.lastName}`;
+
+      const items = document.createElement("td");
+      const list = document.createElement("ul");
+
+      entry.items.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        list.append(li);
+      });
+
+      items.append(list);
+
+      const actions = document.createElement("td");
+      actions.className = "actions";
+
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "secondary";
+      edit.textContent = "Edit";
+      edit.addEventListener("click", () => startEdit(entry.id));
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "delete";
+      remove.textContent = "Delete";
+      remove.addEventListener("click", () => deleteEntry(entry.id));
+
+      actions.append(edit, remove);
+      row.append(name, items, actions);
+      entriesBody.append(row);
+    });
+  }
+
+  async function loadResults() {
+    const result = await apiRequest("results");
+
+    entries = result.entries;
+    document.querySelector("#total-signups").textContent = result.totalSignups;
+    document.querySelector("#total-items").textContent = result.totalItems;
+    document.querySelector("#results-message").textContent =
+      `Showing ${result.totalSignups} signup(s).`;
+
+    renderEntries();
+    loginPanel.hidden = true;
+    resultsPanel.hidden = false;
+  }
+
+  loginForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    password = document.querySelector("#password").value;
+
+    try {
+      await loadResults();
+      sessionStorage.setItem(PASSWORD_KEY, password);
+      document.querySelector("#login-error").hidden = true;
+    } catch (error) {
+      showLoginError(error.message);
+    }
+  });
+
+  document.querySelector("#refresh").addEventListener("click", async () => {
+    try {
+      await loadResults();
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+
+  document.querySelector("#logout").addEventListener("click", () => {
+    password = "";
+    sessionStorage.removeItem(PASSWORD_KEY);
+    resultsPanel.hidden = true;
+    loginPanel.hidden = false;
+    document.querySelector("#password").value = "";
+  });
+
+  function startEdit(id) {
+    const entry = entries.find(item => item.id === id);
+    if (!entry) return;
+
+    editingId = id;
+    document.querySelector("#edit-first").value = entry.firstName;
+    document.querySelector("#edit-last").value = entry.lastName;
+    document.querySelector("#edit-items").value = entry.items.join("\n");
+    document.querySelector("#edit-error").hidden = true;
+
+    editPanel.hidden = false;
+    editPanel.scrollIntoView({ behavior: "smooth" });
+  }
+
+  document.querySelector("#cancel-edit").addEventListener("click", () => {
+    editingId = null;
+    editPanel.hidden = true;
+  });
+
+  editForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const body = {
+      id: editingId,
+      firstName: document.querySelector("#edit-first").value.trim(),
+      lastName: document.querySelector("#edit-last").value.trim(),
+      items: document.querySelector("#edit-items").value
+        .split("\n")
+        .map(item => item.trim())
+        .filter(Boolean),
+    };
+
+    try {
+      await apiRequest("admin-update", "POST", body);
+      editingId = null;
+      editPanel.hidden = true;
+      await loadResults();
+    } catch (error) {
+      const el = document.querySelector("#edit-error");
+      el.textContent = error.message;
+      el.hidden = false;
+    }
+  });
+
+  async function deleteEntry(id) {
+    const entry = entries.find(item => item.id === id);
+    if (!entry) return;
+
+    const name = `${entry.firstName} ${entry.lastName}`;
+
+    if (!confirm(`Delete ${name}'s potluck signup? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await apiRequest("admin-delete", "POST", { id });
+      await loadResults();
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  document.querySelector("#print").addEventListener("click", () => {
+    window.print();
+  });
+
+  if (password) {
+    loadResults().catch(() => {
+      sessionStorage.removeItem(PASSWORD_KEY);
+      password = "";
+    });
+  }
+</script>
+
+<style>
+  .admin-page{min-height:100vh;background:#f4f7f3;padding:3rem 1rem 5rem}
+  .container{max-width:1100px;margin:auto}
+  .heading{margin-bottom:2rem}
+  .heading h1{margin:.6rem 0;font-size:clamp(2rem,5vw,3rem);color:#244b3b}
+  .heading p,.muted{color:#66756b}
+  .back{color:#245a47;text-decoration:none;font-weight:700}
+  .panel{background:#fff;border:1px solid #e0e8e1;border-radius:1rem;padding:1.5rem;margin-bottom:1.5rem}
+  .panel h2{margin-top:0;color:#244b3b}
+  form{display:grid;gap:.9rem;max-width:600px}
+  label{font-weight:700}
+  input,textarea{width:100%;padding:.8rem;border:1px solid #bfc8c1;border-radius:.6rem;font:inherit}
+  button{font:inherit;cursor:pointer}
+  .primary{padding:.85rem 1.2rem;border:0;border-radius:.6rem;background:#245a47;color:#fff;font-weight:700}
+  .secondary{padding:.7rem 1rem;border:1px solid #245a47;border-radius:.6rem;background:#fff;color:#245a47;font-weight:700}
+  .delete{padding:.7rem 1rem;border:1px solid #bd3c34;border-radius:.6rem;background:#fff;color:#a72b25;font-weight:700}
+  .toolbar{display:flex;flex-wrap:wrap;gap:.7rem;margin-bottom:1.5rem}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem}
+  .stat{background:#fff;border-radius:1rem;padding:1.5rem;text-align:center}
+  .stat span{display:block;font-size:2.5rem;font-weight:800;color:#245a47}
+  .stat p{margin:.3rem 0;color:#66756b}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;text-align:left}
+  th,td{padding:1rem;border-bottom:1px solid #e4e9e4;vertical-align:top}
+  th{color:#244b3b}
+  td ul{margin:0;padding-left:1.2rem}
+  .actions{display:flex;gap:.5rem;flex-wrap:wrap}
+  .names{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .edit-buttons{display:flex;gap:.7rem}
+  .error{color:#9a2b25;background:#fff0ed;padding:.8rem;border-radius:.5rem}
+  @media(max-width:600px){.names,.stats{grid-template-columns:1fr}}
+  @media print{
+    .back,.toolbar,.actions-column,.actions,#edit-panel,#login-panel{display:none!important}
+    .admin-page{background:#fff;padding:0}
+    .panel,.stat{border:0;box-shadow:none}
+    .heading{text-align:center}
+    table{font-size:12pt}
+    tr{break-inside:avoid}
+  }
+</style>

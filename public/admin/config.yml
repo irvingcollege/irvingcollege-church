@@ -9,6 +9,34 @@ site_url: https://irvingcollege.church
 display_url: https://irvingcollege.church
 
 collections:
+  - name: potluck
+    label: Potluck Settings
+    files:
+      - name: potluck
+        label: Current Potluck
+        file: src/content/potluck/potluck.md
+        fields:
+          - label: Event Title
+            name: title
+            widget: string
+            default: "Church Potluck"
+
+          - label: Event Date
+            name: date
+            widget: datetime
+            date_format: "YYYY-MM-DD"
+            time_format: false
+
+          - label: Event Description
+            name: description
+            widget: text
+            hint: "Tell everyone about the potluck."
+
+          - label: Accepting Signups
+            name: acceptingSignups
+            widget: boolean
+            default: true
+            hint: "Turn off to close registration."
   - name: meal
     label: Wednesday Meal
     files:
