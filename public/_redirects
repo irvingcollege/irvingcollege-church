@@ -1,1 +1,7 @@
+# Receipt app: keep the church URL while its existing project handles the form.
+/receipts/api/*  https://sunny-genie-1c8c39.netlify.app/.netlify/functions/api/:splat  200!
+/receipt-assets/*  https://sunny-genie-1c8c39.netlify.app/receipt-assets/:splat  200!
+/receipts  https://sunny-genie-1c8c39.netlify.app/  200!
+/receipts/*  https://sunny-genie-1c8c39.netlify.app/:splat  200!
+
 /attendance https://icbc-attendance.icbcnextsteps.chatgpt.site 302
