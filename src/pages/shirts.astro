@@ -1,0 +1,113 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+const sizes = ["Youth S", "Youth M", "Youth L", "Youth XL", "Adult S", "Adult M", "Adult L", "Adult XL", "Adult 2XL", "Adult 3XL", "Adult 4XL", "Adult 5XL"];
+const products = [
+  { id: "tshirt", name: "ICBC T-Shirt", price: 15, image: "/images/icbc-tshirt.png", description: "Soft, charcoal heather short-sleeve T-shirt" },
+  { id: "sweatshirt", name: "ICBC Sweatshirt", price: 30, image: "/images/icbc-sweatshirt.png", description: "Charcoal heather crewneck sweatshirt" },
+];
+---
+<BaseLayout title="Order Church Shirts | Irving College Baptist Church" description="Order Irving College Baptist Church T-shirts and sweatshirts.">
+  <header class="order-header"><a href="/" aria-label="Back to Irving College Baptist Church"><img src="/images/1080logo.jpg" alt="Irving College Baptist Church" /><span>← Church Home</span></a></header>
+  <main class="store">
+    <div class="intro"><span class="eyebrow">REPRESENT YOUR CHURCH</span><h1>ICBC Church Shirts</h1><p>Choose your styles, sizes, and quantities below. We'll calculate your total and send you to Church Center to complete payment.</p></div>
+    <form name="icbc-shirt-orders" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="shirt-form">
+      <input type="hidden" name="form-name" value="icbc-shirt-orders" />
+      <p class="hidden-field"><label>Do not fill this out: <input name="bot-field" /></label></p>
+      <div class="product-grid">
+        {products.map((p) => <section class="product" aria-label={p.name}>
+          <div class="product-image"><img src={p.image} alt={`${p.name} featuring the Irving College Baptist Church logo`} loading="lazy" /></div>
+          <div class="product-body"><div class="product-title"><div><h2>{p.name}</h2><p>{p.description}</p></div><strong>${p.price}</strong></div>
+            <div class="sizes-heading"><span>Size</span><span>Quantity</span></div>
+            <div class="sizes">{sizes.map((s) => <label class="size-row"><span>{s}</span><input type="number" min="0" max="50" step="1" value="0" inputmode="numeric" aria-label={`${p.name} ${s} quantity`} data-item={p.id} data-size={s} data-price={p.price} /></label>)}</div>
+          </div>
+        </section>)}
+      </div>
+      <section class="checkout" aria-labelledby="summary-title">
+        <div><span class="eyebrow">YOUR ORDER</span><h2 id="summary-title">Order Summary</h2><div id="order-lines" class="order-lines" aria-live="polite">Select quantities above to get started.</div></div>
+        <div class="checkout-bottom"><div class="total"><span>Total (<span id="item-count">0</span> items)</span><strong id="order-total">$0.00</strong></div>
+          <div class="customer-grid"><label>First name <input type="text" name="first_name" autocomplete="given-name" maxlength="80" required /></label><label>Last name <input type="text" name="last_name" autocomplete="family-name" maxlength="80" required /></label><label>Email <input type="email" name="email" autocomplete="email" maxlength="160" required /></label><label>Phone <input type="tel" name="phone" autocomplete="tel" maxlength="30" required /></label></div>
+          <label class="notes-label">Order notes (optional)<textarea name="notes" maxlength="500" rows="2" placeholder="Anything we should know about your order?"></textarea></label>
+          <input type="hidden" name="items" id="items-field" /><input type="hidden" name="total" id="total-field" /><input type="hidden" name="order_reference" id="reference-field" /><input type="hidden" name="payment_status" value="Awaiting payment verification" />
+          <p class="message" id="form-message" role="alert" hidden></p><button id="pay-button" type="submit" disabled>Continue to Payment →</button>
+          <p class="fine-print">Your order details are submitted before you leave for Church Center. Complete your payment there to finish the purchase. Payment is not automatically verified on this page.</p>
+        </div>
+      </section>
+    </form>
+  </main>
+  <script>
+    const PRICES: Record<string, number> = { tshirt: 15, sweatshirt: 30 };
+    const NAMES: Record<string, string> = { tshirt: "T-Shirt", sweatshirt: "Sweatshirt" };
+    const GIVING_URL = "https://irvingcollege.churchcenter.com/giving/to/shirts";
+    const form = document.querySelector<HTMLFormElement>("#shirt-form")!;
+    const inputs = Array.from(form.querySelectorAll<HTMLInputElement>("input[data-item]"));
+    const lines = document.querySelector<HTMLElement>("#order-lines")!;
+    const count = document.querySelector<HTMLElement>("#item-count")!;
+    const totalElement = document.querySelector<HTMLElement>("#order-total")!;
+    const payButton = document.querySelector<HTMLButtonElement>("#pay-button")!;
+    const message = document.querySelector<HTMLElement>("#form-message")!;
+    const money = (n: number) => `$${n.toFixed(2)}`;
+    function getOrder() {
+      const items = inputs.flatMap((el) => {
+        const quantity = Number(el.value);
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > 50) return [];
+        const product = el.dataset.item!;
+        return [{ product, size: el.dataset.size!, quantity, price: PRICES[product] }];
+      });
+      return { items, quantity: items.reduce((s, x) => s + x.quantity, 0), total: items.reduce((s, x) => s + x.quantity * x.price, 0) };
+    }
+    function update() {
+      const order = getOrder();
+      lines.replaceChildren();
+      if (!order.items.length) lines.textContent = "Select quantities above to get started.";
+      else for (const item of order.items) {
+        const line = document.createElement("div");
+        line.className = "order-line";
+        const desc = document.createElement("span");
+        desc.textContent = `${NAMES[item.product]} · ${item.size} × ${item.quantity}`;
+        const amount = document.createElement("strong");
+        amount.textContent = money(item.quantity * item.price);
+        line.append(desc, amount);
+        lines.append(line);
+      }
+      count.textContent = String(order.quantity);
+      totalElement.textContent = money(order.total);
+      payButton.disabled = order.quantity === 0;
+    }
+    inputs.forEach((input) => input.addEventListener("input", update));
+    update();
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.hidden = true;
+      if (!form.reportValidity()) return;
+      if (inputs.some((el) => !Number.isInteger(Number(el.value)) || Number(el.value) < 0 || Number(el.value) > 50)) {
+        message.textContent = "Please enter whole-number quantities from 0 to 50.";
+        message.hidden = false;
+        return;
+      }
+      const order = getOrder();
+      if (!order.quantity) return;
+      const ref = `ICBC-${Date.now().toString(36).toUpperCase()}`;
+      (document.querySelector<HTMLInputElement>("#items-field")!).value = order.items.map(x => `${NAMES[x.product]} / ${x.size}: ${x.quantity}`).join("; ");
+      (document.querySelector<HTMLInputElement>("#total-field")!).value = money(order.total);
+      (document.querySelector<HTMLInputElement>("#reference-field")!).value = ref;
+      payButton.disabled = true;
+      payButton.textContent = "Saving order…";
+      try {
+        const body = new URLSearchParams(new FormData(form) as unknown as Record<string,string>);
+        const response = await fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() });
+        if (!response.ok) throw new Error("Unable to save the order");
+        const payment = new URL(GIVING_URL);
+        payment.searchParams.set("default_amount", String(order.total));
+        window.location.assign(payment.toString());
+      } catch {
+        message.textContent = "Your order could not be saved. Please try again; no payment has been started.";
+        message.hidden = false;
+        payButton.disabled = false;
+        payButton.textContent = "Continue to Payment →";
+      }
+    });
+  </script>
+  <style>
+    :global(body){margin:0;background:#f6f8f8;color:#182626;font-family:Inter,system-ui,sans-serif}.order-header{background:white;border-bottom:1px solid #e4ebea}.order-header a{max-width:1180px;margin:auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;color:#23685f;text-decoration:none;font-weight:700;font-size:.9rem}.order-header img{height:54px;max-width:185px;object-fit:contain}.store{max-width:1180px;margin:auto;padding:45px 24px 90px}.intro{text-align:center;max-width:720px;margin:0 auto 38px}.eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.19em;color:#188d84}.intro h1{font-size:clamp(2.2rem,5vw,3.7rem);letter-spacing:-.05em;margin:10px 0 12px}.intro p{color:#5a6a69;line-height:1.65}.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px}.product{background:white;border-radius:18px;overflow:hidden;border:1px solid #e3eae9;box-shadow:0 8px 30px #163c3210}.product-image{background:#f7f7f7;aspect-ratio:1.1;display:flex;align-items:center;justify-content:center}.product-image img{display:block;width:100%;height:100%;object-fit:contain}.product-body{padding:25px}.product-title{display:flex;justify-content:space-between;gap:12px;align-items:start}.product-title h2{font-size:1.45rem;margin:0}.product-title p{color:#687775;font-size:.9rem;line-height:1.4}.product-title strong{font-size:1.65rem;color:#188d84;white-space:nowrap}.sizes-heading,.size-row{display:flex;justify-content:space-between;align-items:center}.sizes-heading{margin-top:20px;padding:11px 2px;border-bottom:2px solid #e6efed;text-transform:uppercase;font-size:.75rem;font-weight:800;letter-spacing:.1em;color:#647573}.size-row{padding:7px 2px;border-bottom:1px solid #edf1f0;font-weight:600}.size-row input{width:75px;max-width:40%;height:39px;border:1px solid #cad9d5;border-radius:8px;text-align:center;font-size:1rem;color:#233}.size-row input:focus,.customer-grid input:focus,textarea:focus{outline:2px solid #41cfc1;outline-offset:1px}.checkout{display:grid;grid-template-columns:1fr 1.1fr;gap:44px;background:white;border-radius:20px;border:1px solid #e3eae9;margin-top:30px;padding:32px}.checkout h2{font-size:1.8rem;margin:10px 0 22px}.order-lines{color:#637471;font-size:.95rem}.order-line{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #edf0ee;color:#293d3b}.total{border-bottom:1px solid #e4ebe9;padding-bottom:18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:1.15rem}.total strong{font-size:2.1rem;color:#168c81}.customer-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.customer-grid label,.notes-label{font-size:.83rem;font-weight:700;display:flex;flex-direction:column;gap:6px}.customer-grid input,.notes-label textarea{font:inherit;font-weight:400;border:1px solid #d1dcda;border-radius:9px;padding:12px;min-width:0;box-sizing:border-box;width:100%}.notes-label{margin-top:14px}#pay-button{width:100%;padding:16px;border:0;border-radius:10px;background:#13897f;color:white;font-size:1.07rem;font-weight:800;cursor:pointer;margin-top:18px}#pay-button:disabled{opacity:.48;cursor:not-allowed}.fine-print{font-size:.78rem;line-height:1.55;color:#657470}.message{background:#fff1ee;color:#9a3027;border-radius:8px;padding:10px}.hidden-field{position:absolute;left:-10000px}@media(max-width:780px){.product-grid,.checkout{grid-template-columns:1fr}.checkout{gap:24px;padding:22px}.store{padding:28px 14px 60px}.product-body{padding:20px}}@media(max-width:420px){.customer-grid{grid-template-columns:1fr}}
+  </style>
+</BaseLayout>
