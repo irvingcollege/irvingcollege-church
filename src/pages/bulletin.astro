@@ -1,0 +1,58 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Weekly Bulletin | Irving College Baptist Church" description="Read the current Irving College Baptist Church weekly bulletin.">
+  <main class="bulletin-page">
+    <div class="bulletin-wrap">
+      <p class="eyebrow">Irving College Baptist Church</p>
+      <h1 id="bulletin-title">Weekly Bulletin</h1>
+      <p id="bulletin-date"></p>
+      <div id="bulletin-status" role="status">Loading bulletin...</div>
+      <div id="bulletin-frame" hidden>
+        <iframe id="bulletin-pdf" title="Church weekly bulletin PDF" loading="eager"></iframe>
+        <p class="hint">Tap the announcements in the PDF to open their signup pages. If links do not respond inside your viewer, open the PDF using the button below.</p>
+        <a class="button" id="bulletin-open" target="_blank" rel="noopener noreferrer">Open full bulletin PDF</a>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+<script>
+  async function loadBulletin() {
+    const status = document.getElementById("bulletin-status");
+    const frame = document.getElementById("bulletin-frame");
+    const iframe = document.getElementById("bulletin-pdf");
+    const openLink = document.getElementById("bulletin-open");
+    try {
+      const response = await fetch("/bulletin/current.json", {cache:"no-store"});
+      if (!response.ok) throw new Error("Could not load bulletin settings.");
+      const data = await response.json();
+      document.getElementById("bulletin-title").textContent = data.title || "Weekly Bulletin";
+      document.getElementById("bulletin-date").textContent = data.date || "";
+      if (!data.pdf || typeof data.pdf !== "string") {
+        status.textContent = "The latest bulletin will appear here after staff upload it.";
+        return;
+      }
+      const url = new URL(data.pdf, window.location.origin);
+      if (url.origin !== window.location.origin || !url.pathname.toLowerCase().endsWith(".pdf")) throw new Error("Invalid bulletin PDF address.");
+      iframe.src = url.href;
+      openLink.href = url.href;
+      frame.hidden = false;
+      status.hidden = true;
+    } catch (error) {
+      status.textContent = "The bulletin is temporarily unavailable. Please try again shortly.";
+      console.error(error);
+    }
+  }
+  loadBulletin();
+</script>
+<style>
+  .bulletin-page { min-height:75vh; padding:3rem 1rem; background:#f7faf9; color:#122521; }
+  .bulletin-wrap { width:min(940px,100%); margin:auto; text-align:center; }
+  .eyebrow { color:#28796e; font-weight:700; text-transform:uppercase; letter-spacing:.12em; font-size:.8rem; }
+  h1 { font-size:clamp(2rem,5vw,3rem); margin:.5rem 0; }
+  #bulletin-date { margin-bottom:1.5rem; color:#56635e; }
+  #bulletin-pdf { display:block; width:100%; height:min(80vh,1050px); min-height:530px; background:#fff; border:1px solid #d7dfda; border-radius:12px; }
+  .hint { font-size:.9rem; margin:1rem auto; max-width:650px; }
+  .button { display:inline-block; padding:.9rem 1.5rem; margin:1rem 0; border-radius:999px; background:#2e6e49; color:white; text-decoration:none; font-weight:700; }
+  #bulletin-frame[hidden], #bulletin-status[hidden] { display:none; }
+</style>
