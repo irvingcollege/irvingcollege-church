@@ -1,166 +1,112 @@
 ---
 import Section from "./Section.astro";
 import Container from "./Container.astro";
-import SectionHeading from "./SectionHeading.astro";
-
-const channelId = "UCzvfQahUozA6xOzMd3uQrCQ";
-const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-
-let sermon = {
-  title: "Watch Our Latest Sermon",
-  videoId: "l182YQXexKs",
-  published: "",
-  url: "https://www.youtube.com/watch?v=l182YQXexKs",
-};
-
-try {
-  const response = await fetch(feedUrl);
-
-  if (!response.ok) {
-    throw new Error(`YouTube feed returned ${response.status}`);
-  }
-
-  const xml = await response.text();
-
-  // Get the first video entry in the YouTube feed
-  const entryMatch = xml.match(/<entry>([\s\S]*?)<\/entry>/);
-
-  if (entryMatch) {
-    const entry = entryMatch[1];
-
-    const videoId =
-      entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1];
-
-    const title =
-      entry.match(/<title>([\s\S]*?)<\/title>/)?.[1];
-
-    const published =
-      entry.match(/<published>(.*?)<\/published>/)?.[1];
-
-    if (videoId && title) {
-      sermon = {
-        title: title
-          .replace("<![CDATA[", "")
-          .replace("]]>", "")
-          .trim(),
-
-        videoId: videoId.trim(),
-
-        published: published?.trim() || "",
-
-        url: `https://www.youtube.com/watch?v=${videoId.trim()}`,
-      };
-    }
-  }
-} catch (error) {
-  console.error(
-    "Could not load latest YouTube sermon:",
-    error
-  );
-}
-
-const formattedDate = sermon.published
-  ? new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    }).format(new Date(sermon.published))
-  : "";
 ---
 
 <Section id="sermon" soft>
   <Container>
     <div class="sermon-layout">
-
-      <div class="sermon-video">
-        <iframe
-          src={`https://www.youtube.com/embed/${sermon.videoId}`}
-          title={sermon.title}
-          loading="lazy"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-        ></iframe>
+      <div class="sermon-video" id="worship-player">
+        <div class="player-placeholder">Loading worship video…</div>
       </div>
-
       <div class="sermon-content">
-        <SectionHeading
-          eyebrow="Latest Sermon"
-          title={sermon.title}
-          text="Watch our latest message and discover the hope found in Jesus Christ."
-          align="left"
-        />
-
-        {formattedDate && (
-          <p class="sermon-date">{formattedDate}</p>
-        )}
-
-        <a
-          class="watch-button"
-          href={sermon.url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Watch on YouTube
+        <p class="section-eyebrow" id="worship-label">Latest Sermon</p>
+        <h2 id="worship-title">Watch Our Latest Service</h2>
+        <p class="sermon-description" id="worship-description">
+          Watch our latest message and discover the hope found in Jesus Christ.
+        </p>
+        <p class="sermon-date" id="worship-date"></p>
+        <a class="watch-button" id="worship-link" href="https://live.irvingcollege.church" target="_blank" rel="noopener noreferrer">
+          View Worship
         </a>
       </div>
-
     </div>
   </Container>
 </Section>
 
-<style>
-  .sermon-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-    align-items: center;
-    gap: clamp(2rem, 6vw, 5rem);
-  }
+<script>
+  type Sermon = { title: string; date: string; url: string };
+  type Feed = { online: boolean; liveUrl: string; latestSermon: Sermon | null };
+  const player = document.getElementById("worship-player");
+  const label = document.getElementById("worship-label");
+  const title = document.getElementById("worship-title");
+  const description = document.getElementById("worship-description");
+  const date = document.getElementById("worship-date");
+  const link = document.getElementById("worship-link") as HTMLAnchorElement | null;
+  let shown = "";
 
-  .sermon-video {
-    overflow: hidden;
-    border-radius: 1.25rem;
-    box-shadow: 0 1.5rem 3.5rem rgba(20, 45, 35, 0.16);
-  }
+  function render(feed: Feed) {
+    if (!player || !label || !title || !description || !date || !link) return;
+    const key = feed.online ? "live" : feed.latestSermon?.url || "none";
+    if (shown === key) return;
+    shown = key;
+    player.replaceChildren();
 
-  .sermon-video iframe {
-    display: block;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    border: 0;
-  }
-
-  .sermon-date {
-    margin: -0.5rem 0 1.5rem;
-    font-size: 0.95rem;
-    font-weight: 700;
-  }
-
-  .watch-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 52px;
-    padding: 0.9rem 1.6rem;
-    color: #ffffff;
-    background: var(--color-primary);
-    border-radius: 999px;
-    font-weight: 700;
-    text-decoration: none;
-    transition:
-      background-color 0.2s ease,
-      transform 0.2s ease;
-  }
-
-  .watch-button:hover,
-  .watch-button:focus-visible {
-    color: #ffffff;
-    background: var(--color-primary-dark);
-    transform: translateY(-2px);
-  }
-
-  @media (max-width: 800px) {
-    .sermon-layout {
-      grid-template-columns: 1fr;
+    if (feed.online) {
+      const iframe = document.createElement("iframe");
+      iframe.src = "https://live.irvingcollege.church/embed/video";
+      iframe.title = "Irving College Baptist Church live worship";
+      iframe.allow = "autoplay; fullscreen; picture-in-picture";
+      iframe.allowFullscreen = true;
+      player.append(iframe);
+      label.textContent = "● LIVE NOW";
+      title.textContent = "Watch Live Worship";
+      description.textContent = "Join us live at Irving College Baptist Church.";
+      date.textContent = "";
+      link.href = "https://live.irvingcollege.church";
+      link.textContent = "Open Live Stream";
+    } else if (feed.latestSermon) {
+      const sermon = feed.latestSermon;
+      const video = document.createElement("video");
+      video.src = sermon.url;
+      video.controls = true;
+      video.preload = "metadata";
+      video.playsInline = true;
+      player.append(video);
+      label.textContent = "Latest Sermon";
+      title.textContent = sermon.title;
+      description.textContent = "Watch our latest worship service and discover the hope found in Jesus Christ.";
+      date.textContent = sermon.date;
+      link.href = sermon.url;
+      link.textContent = "Open Recording";
+    } else {
+      const message = document.createElement("div");
+      message.className = "player-placeholder";
+      message.textContent = "Video temporarily unavailable.";
+      player.append(message);
+      label.textContent = "Worship Online";
+      title.textContent = "Watch Worship";
+      description.textContent = "Please check back shortly.";
+      date.textContent = "";
+      link.href = "https://live.irvingcollege.church";
+      link.textContent = "Visit Livestream";
     }
   }
+
+  async function refresh() {
+    try {
+      const response = await fetch("/.netlify/functions/worship-feed", { cache: "no-store" });
+      if (!response.ok) throw new Error("Worship feed unavailable");
+      render(await response.json() as Feed);
+    } catch (error) {
+      console.error(error);
+      if (!shown && player) player.textContent = "Video temporarily unavailable. Please try again shortly.";
+    }
+  }
+
+  refresh();
+  window.setInterval(refresh, 30000);
+</script>
+
+<style>
+  .sermon-layout { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr); align-items:center; gap:clamp(2rem,6vw,5rem); }
+  .sermon-video { overflow:hidden; border-radius:1.25rem; box-shadow:0 1.5rem 3.5rem rgba(20,45,35,.16); background:#161616; aspect-ratio:16/9; }
+  .sermon-video :global(iframe), .sermon-video :global(video) { display:block; width:100%; height:100%; border:0; }
+  .sermon-video :global(.player-placeholder) { display:grid; place-items:center; width:100%; height:100%; color:#fff; padding:1rem; text-align:center; }
+  .sermon-content h2 { font-size:clamp(1.8rem,3vw,2.8rem); line-height:1.2; margin:.35rem 0 1rem; }
+  .sermon-description { margin:0 0 1.5rem; }
+  .sermon-date { margin:-.5rem 0 1.5rem; font-size:.95rem; font-weight:700; }
+  .watch-button { display:inline-flex; align-items:center; justify-content:center; min-height:52px; padding:.9rem 1.6rem; color:#fff; background:var(--color-primary); border-radius:999px; font-weight:700; text-decoration:none; transition:background-color .2s ease,transform .2s ease; }
+  .watch-button:hover, .watch-button:focus-visible { color:#fff; background:var(--color-primary-dark); transform:translateY(-2px); }
+  @media(max-width:800px) { .sermon-layout { grid-template-columns:1fr; } }
 </style>
