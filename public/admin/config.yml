@@ -154,6 +154,6 @@ collections:
           - label: Bulletin PDF
             name: pdf
             widget: file
-            media_folder: /public/bulletin/files
+            media_folder: public/bulletin/files
             public_folder: /bulletin/files
             hint: "Upload your final interactive PDF with clickable announcement links."
