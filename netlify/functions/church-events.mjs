@@ -48,7 +48,7 @@ function formatTime(time) {
   return (h%12||12)+":"+String(m).padStart(2,"0")+(h>=12?" PM":" AM");
 }
 function generate(items) {
-  const now=new Date(), today=new Intl.DateTimeFormat("en-CA",{timeZone:ZONE,year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
+  const now=new Date(), today=new Intl.DateTimeFormat("sv-SE",{timeZone:ZONE,year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
   // Rolling 120-day upcoming window; simple recurrence rules.
   const max=shiftDay(today,120), out=[], overrides=new Set();
   for(const item of items) if(item["RECURRENCE-ID"]) overrides.add(item.UID+"|"+rawDate(item["RECURRENCE-ID"])?.day);
