@@ -1,0 +1,96 @@
+---
+/** Full-screen, width-fitted mobile bulletin viewer. Announcement links are overlaid
+ * on the source PDF so a PDF viewer that ignores annotations still works. */
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Weekly Bulletin | ICBC</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:#f4f6f5;font-family:system-ui,-apple-system,sans-serif}
+    #status{text-align:center;padding:2rem 1rem;color:#30443e}
+    #pages{width:100%;max-width:760px;margin:0 auto;padding:0}
+    .page{position:relative;margin:0 auto 8px;background:white}
+    canvas{display:block;width:100%;height:auto}
+    .hotspot{position:absolute;display:block;z-index:2;cursor:pointer;border:0;background:transparent}
+    .hotspot:focus-visible{outline:3px solid #41cfc1;outline-offset:-3px}
+    #fallback{display:none;text-align:center;padding:12px}
+    #fallback a{color:#167a70;font-weight:700}
+  </style>
+</head>
+<body>
+  <div id="status" role="status">Loading this week's bulletin…</div>
+  <div id="pages"></div>
+  <div id="fallback"><a id="download" href="#">Open original PDF</a></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    (async () => {
+      const status=document.getElementById("status");
+      const pages=document.getElementById("pages");
+      const fallback=document.getElementById("fallback");
+      try {
+        const settingsResponse=await fetch("/bulletin/current.json",{cache:"no-store"});
+        if(!settingsResponse.ok) throw new Error("Bulletin settings unavailable");
+        const settings=await settingsResponse.json();
+        if(!settings.pdf) { status.textContent="This week's bulletin has not been uploaded yet."; return; }
+        const pdfUrl=new URL(settings.pdf,location.origin);
+        if(pdfUrl.origin!==location.origin || !pdfUrl.pathname.toLowerCase().endsWith(".pdf")) throw new Error("Invalid bulletin file");
+        document.getElementById("download").href=pdfUrl.href;
+        fallback.style.display="block";
+        if(!window.pdfjsLib) throw new Error("PDF renderer could not load");
+        pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        const doc=await pdfjsLib.getDocument({url:pdfUrl.href}).promise;
+        for(let i=1;i<=doc.numPages;i++){
+          const page=await doc.getPage(i);
+          const base=page.getViewport({scale:1});
+          const width=Math.min(document.documentElement.clientWidth,760);
+          const viewport=page.getViewport({scale:width/base.width});
+          const wrap=document.createElement("div");wrap.className="page";
+          wrap.style.width=width+"px";wrap.style.height=viewport.height+"px";
+          const canvas=document.createElement("canvas");
+          const dpr=Math.min(devicePixelRatio||1,2);
+          canvas.width=Math.ceil(viewport.width*dpr);
+          canvas.height=Math.ceil(viewport.height*dpr);
+          canvas.style.width=viewport.width+"px";
+          canvas.style.height=viewport.height+"px";
+          wrap.append(canvas);pages.append(wrap);
+          await page.render({canvasContext:canvas.getContext("2d"),viewport:page.getViewport({scale:width/base.width*dpr})}).promise;
+          // One-page church bulletin: make entire announcement panels tappable,
+          // regardless of whether the uploaded PDF preserved annotations.
+          if(i===1){
+            const overlays=[
+              {name:"Church website",top:0,bottom:.19,url:"https://irvingcollege.church"},
+              {name:"Wednesday Meal signup",top:.19,bottom:.391,url:"https://irvingcollege.church/meal"},
+              {name:"Baptism signup",top:.395,bottom:.598,url:"https://irvingcollege.churchcenter.com/people/forms/1335707"},
+              {name:"Thanksgiving signup",top:.601,bottom:.802,url:"https://www.irvingcollege.church/potluck"}
+            ];
+            for(const item of overlays){
+              const a=document.createElement("a");
+              a.className="hotspot";a.href=item.url;a.setAttribute("aria-label",item.name);
+              a.style.left="0";a.style.width="100%";
+              a.style.top=(item.top*100)+"%";a.style.height=((item.bottom-item.top)*100)+"%";
+              wrap.append(a);
+            }
+          } else {
+            // Respect embedded clickable links on any additional PDF pages.
+            for(const a of await page.getAnnotations()){
+              if(a.subtype!=="Link" || !a.url || !/^https:\/\//.test(a.url)) continue;
+              const rect=viewport.convertToViewportRectangle(a.rect);
+              const link=document.createElement("a");link.className="hotspot";link.href=a.url;
+              link.setAttribute("aria-label","Open bulletin link");
+              link.style.left=Math.min(rect[0],rect[2])+"px";
+              link.style.top=Math.min(rect[1],rect[3])+"px";
+              link.style.width=Math.abs(rect[2]-rect[0])+"px";
+              link.style.height=Math.abs(rect[3]-rect[1])+"px";
+              wrap.append(link);
+            }
+          }
+        }
+        status.remove();
+      } catch(e) { console.error(e); status.textContent="Unable to display the bulletin right now. Use the PDF link below."; }
+    })();
+  </script>
+</body>
+</html>
