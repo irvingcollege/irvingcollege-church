@@ -28,6 +28,11 @@
     .lead{font-size:clamp(17px,2vw,20px);max-width:640px;margin:0 auto 25px;color:#73472f}
     .button{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:16px 25px;border-radius:8px;background:#742d0d;color:#fffaf3;text-decoration:none;font-size:16px;font-weight:750;line-height:1.4;transition:background .15s}
     .button:hover{background:#552007}
+    .payment-options{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+    .giving .payment-options{justify-content:flex-start}
+    .button.venmo{background:#008CFF;color:#fff}
+    .button.venmo:hover{background:#006ac2}
+    .venmo-help{font-size:13px;color:#73472f;margin:12px 0 0;line-height:1.6}
     .note{font-size:13px;color:#73472f;margin:12px 0 0}
     .giving{display:grid;grid-template-columns:1fr 1.5fr;gap:36px;align-items:center;background:#fffcf7;border:1px solid #59230322;border-radius:12px;margin-top:28px;padding:34px}
     .amount{font-family:Georgia,"Times New Roman",serif;font-size:72px;line-height:1.1;margin:0}
@@ -47,12 +52,15 @@
       <p class="eyebrow">Thanksgiving Day Meals</p>
       <h1 id="title">Help set a family's Thanksgiving table.</h1>
       <p class="lead">Help families have the food they need to enjoy a great Thanksgiving Day meal. Together, we can share hope and show the love of Jesus in a practical way.</p>
-      <a class="button" href="https://irvingcollege.churchcenter.com/giving/to/thanksgiving">Give toward Thanksgiving meals&nbsp; →</a>
-      <p class="note">Continue to our Thanksgiving giving page on Church Center.</p>
+      <div class="payment-options">
+        <a class="button" href="https://irvingcollege.churchcenter.com/giving/to/thanksgiving">Give through Church Center&nbsp; →</a>
+        <a class="button venmo" href="https://venmo.com/irvingcollege?txn=pay&amp;note=Thanksgiving%20Meals">Give with Venmo&nbsp; →</a>
+      </div>
+      <p class="note">Venmo: <a href="https://venmo.com/u/irvingcollege">@irvingcollege</a> · Please check that the “What's this for?” box says <strong>Thanksgiving Meals</strong> before sending. If it is blank, enter that note.</p>
     </section>
     <section class="giving" aria-labelledby="giving-title">
       <div><p class="amount">$50</p><p class="label">provides a Thanksgiving meal<br>for one family</p></div>
-      <div><h2 id="giving-title">Every gift helps.</h2><p>Sponsor a family's meal, help several families, or give any amount toward the Thanksgiving meal fund. Thank you for helping us care for our neighbors.</p><a class="button" href="https://irvingcollege.churchcenter.com/giving/to/thanksgiving">Give through Church Center&nbsp; →</a></div>
+      <div><h2 id="giving-title">Every gift helps.</h2><p>Sponsor a family's meal, help several families, or give any amount toward the Thanksgiving meal fund. Thank you for helping us care for our neighbors.</p><div class="payment-options"><a class="button" href="https://irvingcollege.churchcenter.com/giving/to/thanksgiving">Give through Church Center&nbsp; →</a><a class="button venmo" href="https://venmo.com/irvingcollege?txn=pay&amp;note=Thanksgiving%20Meals">Give with Venmo&nbsp; →</a></div><p class="venmo-help">Giving with Venmo? Send to <a href="https://venmo.com/u/irvingcollege">@irvingcollege</a> and use <strong>Thanksgiving Meals</strong> as your payment note.</p></div>
     </section>
   </main>
   <footer><p><a href="/">Irving College Baptist Church</a> · A Place of Hope for Warren County</p></footer>
