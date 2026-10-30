@@ -9,7 +9,7 @@ const products = [
 <BaseLayout title="Order Church Shirts | Irving College Baptist Church" description="Order Irving College Baptist Church T-shirts and sweatshirts.">
   <header class="order-header"><a href="/" aria-label="Back to Irving College Baptist Church"><img src="/images/1080logo.jpg" alt="Irving College Baptist Church" /><span>← Church Home</span></a></header>
   <main class="store">
-    <div class="intro"><span class="eyebrow">REPRESENT YOUR CHURCH</span><h1>ICBC Church Shirts</h1><p>Choose your styles, sizes, and quantities below. We'll calculate your total and send you to Church Center to complete payment.</p></div>
+    <div class="intro"><span class="eyebrow">REPRESENT YOUR CHURCH</span><h1>ICBC Church Shirts</h1><p>Choose your styles, sizes, and quantities below. We'll calculate your total and let you pay through Church Center or Venmo.</p></div>
     <form name="icbc-shirt-orders" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="shirt-form">
       <input type="hidden" name="form-name" value="icbc-shirt-orders" />
       <p class="hidden-field"><label>Do not fill this out: <input name="bot-field" /></label></p>
@@ -28,8 +28,10 @@ const products = [
           <div class="customer-grid"><label>First name <input type="text" name="first_name" autocomplete="given-name" maxlength="80" required /></label><label>Last name <input type="text" name="last_name" autocomplete="family-name" maxlength="80" required /></label><label>Email <input type="email" name="email" autocomplete="email" maxlength="160" required /></label><label>Phone <input type="tel" name="phone" autocomplete="tel" maxlength="30" required /></label></div>
           <label class="notes-label">Order notes (optional)<textarea name="notes" maxlength="500" rows="2" placeholder="Anything we should know about your order?"></textarea></label>
           <input type="hidden" name="items" id="items-field" /><input type="hidden" name="total" id="total-field" /><input type="hidden" name="order_reference" id="reference-field" /><input type="hidden" name="payment_status" value="Awaiting payment verification" />
-          <p class="message" id="form-message" role="alert" hidden></p><button id="pay-button" type="submit" disabled>Continue to Payment →</button>
-          <p class="fine-print">Your order details are submitted before you leave for Church Center. Complete your payment there to finish the purchase. Payment is not automatically verified on this page.</p>
+          <input type="hidden" name="payment_method" id="payment-method-field" />
+          <p class="message" id="form-message" role="alert" hidden></p>
+          <div class="payment-buttons"><button id="pay-button" type="submit" value="church-center" disabled>Pay with Church Center →</button><button id="venmo-button" type="submit" value="venmo" disabled>Pay with Venmo →</button></div>
+          <p class="fine-print">Your order details are submitted before you leave for Church Center or Venmo. Venmo will be prefilled with your total and “Shirts” as the payment note. Complete your payment in your chosen service to finish the purchase. Payment is not automatically verified on this page.</p>
         </div>
       </section>
     </form>
@@ -44,6 +46,9 @@ const products = [
     const count = document.querySelector<HTMLElement>("#item-count")!;
     const totalElement = document.querySelector<HTMLElement>("#order-total")!;
     const payButton = document.querySelector<HTMLButtonElement>("#pay-button")!;
+    const venmoButton = document.querySelector<HTMLButtonElement>("#venmo-button")!;
+    const paymentButtons = [payButton, venmoButton];
+    let saving = false;
     const message = document.querySelector<HTMLElement>("#form-message")!;
     const money = (n: number) => `$${n.toFixed(2)}`;
     function getOrder() {
@@ -71,12 +76,14 @@ const products = [
       }
       count.textContent = String(order.quantity);
       totalElement.textContent = money(order.total);
-      payButton.disabled = order.quantity === 0;
+      paymentButtons.forEach(button => { button.disabled = saving || order.quantity === 0; });
     }
     inputs.forEach((input) => input.addEventListener("input", update));
     update();
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (saving) return;
+      const method = (event.submitter as HTMLButtonElement | null)?.value === "venmo" ? "venmo" : "church-center";
       message.hidden = true;
       if (!form.reportValidity()) return;
       if (inputs.some((el) => !Number.isInteger(Number(el.value)) || Number(el.value) < 0 || Number(el.value) > 50)) {
@@ -90,24 +97,35 @@ const products = [
       (document.querySelector<HTMLInputElement>("#items-field")!).value = order.items.map(x => `${NAMES[x.product]} / ${x.size}: ${x.quantity}`).join("; ");
       (document.querySelector<HTMLInputElement>("#total-field")!).value = money(order.total);
       (document.querySelector<HTMLInputElement>("#reference-field")!).value = ref;
-      payButton.disabled = true;
-      payButton.textContent = "Saving order…";
+      (document.querySelector<HTMLInputElement>("#payment-method-field")!).value = method === "venmo" ? "Venmo" : "Church Center";
+      const payment = new URL(method === "venmo" ? "https://venmo.com/irvingcollege" : GIVING_URL);
+      if (method === "venmo") {
+        payment.searchParams.set("txn", "pay");
+        payment.searchParams.set("amount", order.total.toFixed(2));
+        payment.searchParams.set("note", "Shirts");
+      } else {
+        payment.searchParams.set("default_amount", String(order.total));
+      }
+      saving = true;
+      paymentButtons.forEach(button => { button.disabled = true; });
+      const activeButton = method === "venmo" ? venmoButton : payButton;
+      activeButton.textContent = "Saving order…";
       try {
         const body = new URLSearchParams(new FormData(form) as unknown as Record<string,string>);
         const response = await fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() });
         if (!response.ok) throw new Error("Unable to save the order");
-        const payment = new URL(GIVING_URL);
-        payment.searchParams.set("default_amount", String(order.total));
         window.location.assign(payment.toString());
       } catch {
         message.textContent = "Your order could not be saved. Please try again; no payment has been started.";
         message.hidden = false;
-        payButton.disabled = false;
-        payButton.textContent = "Continue to Payment →";
+        saving = false;
+        payButton.textContent = "Pay with Church Center →";
+        venmoButton.textContent = "Pay with Venmo →";
+        update();
       }
     });
   </script>
   <style>
-    :global(body){margin:0;background:#f6f8f8;color:#182626;font-family:Inter,system-ui,sans-serif}.order-header{background:white;border-bottom:1px solid #e4ebea}.order-header a{max-width:1180px;margin:auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;color:#23685f;text-decoration:none;font-weight:700;font-size:.9rem}.order-header img{height:54px;max-width:185px;object-fit:contain}.store{max-width:1180px;margin:auto;padding:45px 24px 90px}.intro{text-align:center;max-width:720px;margin:0 auto 38px}.eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.19em;color:#188d84}.intro h1{font-size:clamp(2.2rem,5vw,3.7rem);letter-spacing:-.05em;margin:10px 0 12px}.intro p{color:#5a6a69;line-height:1.65}.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px}.product{background:white;border-radius:18px;overflow:hidden;border:1px solid #e3eae9;box-shadow:0 8px 30px #163c3210}.product-image{background:#f7f7f7;aspect-ratio:1.1;display:flex;align-items:center;justify-content:center}.product-image img{display:block;width:100%;height:100%;object-fit:contain}.product-body{padding:25px}.product-title{display:flex;justify-content:space-between;gap:12px;align-items:start}.product-title h2{font-size:1.45rem;margin:0}.product-title p{color:#687775;font-size:.9rem;line-height:1.4}.product-title strong{font-size:1.65rem;color:#188d84;white-space:nowrap}.sizes-heading,.size-row{display:flex;justify-content:space-between;align-items:center}.sizes-heading{margin-top:20px;padding:11px 2px;border-bottom:2px solid #e6efed;text-transform:uppercase;font-size:.75rem;font-weight:800;letter-spacing:.1em;color:#647573}.size-row{padding:7px 2px;border-bottom:1px solid #edf1f0;font-weight:600}.size-row input{width:75px;max-width:40%;height:39px;border:1px solid #cad9d5;border-radius:8px;text-align:center;font-size:1rem;color:#233}.size-row input:focus,.customer-grid input:focus,textarea:focus{outline:2px solid #41cfc1;outline-offset:1px}.checkout{display:grid;grid-template-columns:1fr 1.1fr;gap:44px;background:white;border-radius:20px;border:1px solid #e3eae9;margin-top:30px;padding:32px}.checkout h2{font-size:1.8rem;margin:10px 0 22px}.order-lines{color:#637471;font-size:.95rem}.order-line{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #edf0ee;color:#293d3b}.total{border-bottom:1px solid #e4ebe9;padding-bottom:18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:1.15rem}.total strong{font-size:2.1rem;color:#168c81}.customer-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.customer-grid label,.notes-label{font-size:.83rem;font-weight:700;display:flex;flex-direction:column;gap:6px}.customer-grid input,.notes-label textarea{font:inherit;font-weight:400;border:1px solid #d1dcda;border-radius:9px;padding:12px;min-width:0;box-sizing:border-box;width:100%}.notes-label{margin-top:14px}#pay-button{width:100%;padding:16px;border:0;border-radius:10px;background:#13897f;color:white;font-size:1.07rem;font-weight:800;cursor:pointer;margin-top:18px}#pay-button:disabled{opacity:.48;cursor:not-allowed}.fine-print{font-size:.78rem;line-height:1.55;color:#657470}.message{background:#fff1ee;color:#9a3027;border-radius:8px;padding:10px}.hidden-field{position:absolute;left:-10000px}@media(max-width:780px){.product-grid,.checkout{grid-template-columns:1fr}.checkout{gap:24px;padding:22px}.store{padding:28px 14px 60px}.product-body{padding:20px}}@media(max-width:420px){.customer-grid{grid-template-columns:1fr}}
+    :global(body){margin:0;background:#f6f8f8;color:#182626;font-family:Inter,system-ui,sans-serif}.order-header{background:white;border-bottom:1px solid #e4ebea}.order-header a{max-width:1180px;margin:auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;color:#23685f;text-decoration:none;font-weight:700;font-size:.9rem}.order-header img{height:54px;max-width:185px;object-fit:contain}.store{max-width:1180px;margin:auto;padding:45px 24px 90px}.intro{text-align:center;max-width:720px;margin:0 auto 38px}.eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.19em;color:#188d84}.intro h1{font-size:clamp(2.2rem,5vw,3.7rem);letter-spacing:-.05em;margin:10px 0 12px}.intro p{color:#5a6a69;line-height:1.65}.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px}.product{background:white;border-radius:18px;overflow:hidden;border:1px solid #e3eae9;box-shadow:0 8px 30px #163c3210}.product-image{background:#f7f7f7;aspect-ratio:1.1;display:flex;align-items:center;justify-content:center}.product-image img{display:block;width:100%;height:100%;object-fit:contain}.product-body{padding:25px}.product-title{display:flex;justify-content:space-between;gap:12px;align-items:start}.product-title h2{font-size:1.45rem;margin:0}.product-title p{color:#687775;font-size:.9rem;line-height:1.4}.product-title strong{font-size:1.65rem;color:#188d84;white-space:nowrap}.sizes-heading,.size-row{display:flex;justify-content:space-between;align-items:center}.sizes-heading{margin-top:20px;padding:11px 2px;border-bottom:2px solid #e6efed;text-transform:uppercase;font-size:.75rem;font-weight:800;letter-spacing:.1em;color:#647573}.size-row{padding:7px 2px;border-bottom:1px solid #edf1f0;font-weight:600}.size-row input{width:75px;max-width:40%;height:39px;border:1px solid #cad9d5;border-radius:8px;text-align:center;font-size:1rem;color:#233}.size-row input:focus,.customer-grid input:focus,textarea:focus{outline:2px solid #41cfc1;outline-offset:1px}.checkout{display:grid;grid-template-columns:1fr 1.1fr;gap:44px;background:white;border-radius:20px;border:1px solid #e3eae9;margin-top:30px;padding:32px}.checkout h2{font-size:1.8rem;margin:10px 0 22px}.order-lines{color:#637471;font-size:.95rem}.order-line{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #edf0ee;color:#293d3b}.total{border-bottom:1px solid #e4ebe9;padding-bottom:18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:1.15rem}.total strong{font-size:2.1rem;color:#168c81}.customer-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.customer-grid label,.notes-label{font-size:.83rem;font-weight:700;display:flex;flex-direction:column;gap:6px}.customer-grid input,.notes-label textarea{font:inherit;font-weight:400;border:1px solid #d1dcda;border-radius:9px;padding:12px;min-width:0;box-sizing:border-box;width:100%}.notes-label{margin-top:14px}.payment-buttons{display:grid;gap:10px;margin-top:18px}#pay-button,#venmo-button{width:100%;padding:16px;border:0;border-radius:10px;background:#13897f;color:white;font-size:1.07rem;font-weight:800;cursor:pointer;margin-top:0}#venmo-button{background:#0074de}#pay-button:disabled,#venmo-button:disabled{opacity:.48;cursor:not-allowed}.fine-print{font-size:.78rem;line-height:1.55;color:#657470}.message{background:#fff1ee;color:#9a3027;border-radius:8px;padding:10px}.hidden-field{position:absolute;left:-10000px}@media(max-width:780px){.product-grid,.checkout{grid-template-columns:1fr}.checkout{gap:24px;padding:22px}.store{padding:28px 14px 60px}.product-body{padding:20px}}@media(max-width:420px){.customer-grid{grid-template-columns:1fr}}
   </style>
 </BaseLayout>
