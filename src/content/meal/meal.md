@@ -1,7 +1,7 @@
 ---
 showMenu: true
-title: Chili Dogs
-image: images/uploads/original-size-irvingcollege-1560-x-450-px-.png
+title: Baked Potato Bar
+image: images/uploads/original-size-irvingcollege-1920-x-1080-px-.png
 menu: We hope you will join us this Wednesday.
 note: ""
 ---
