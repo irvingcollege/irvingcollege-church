@@ -134,7 +134,16 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
       <p><a href={httpsLink(sunday.watchUrl, 'https://www.youtube.com/@irvingcollege.church')}>Browse past sermons</a></p>
     </section>
     {scriptures.some(passage => !passage.translation?.trim() || /^(csb|christian standard bible)$/i.test(passage.translation.trim())) && <footer class="scripture-credit"><small>Scripture quotations marked CSB are from the Christian Standard Bible®, copyright © 2017 by Holman Bible Publishers. Used by permission.</small></footer>}
+    <p id="install-link" hidden><button type="button" data-install>Add to Home Screen</button></p>
   </main>
+  <aside id="install-reminder" hidden aria-label="Add the Sunday app to your phone">
+    <button type="button" data-install>Add to Home Screen</button>
+  </aside>
+  <dialog id="install-help" aria-labelledby="install-title">
+    <h2 id="install-title">Add to Home Screen</h2>
+    <p id="install-steps"></p>
+    <form method="dialog"><button autofocus>Close</button></form>
+  </dialog>
   <nav aria-label="Sunday app"><a href="#message">Message</a><a href="#scripture">Scripture</a><a href="#bulletin">Bulletin</a><a href="#events">Events</a><a href="#give">Give</a><a href="#watch">Watch</a></nav>
 </body>
 </html>
@@ -176,6 +185,60 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     });
   }
 
+  type InstallPrompt = Event & {
+    prompt: () => Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  };
+  const reminder = document.getElementById('install-reminder');
+  const installLink = document.getElementById('install-link');
+  const help = document.querySelector<HTMLDialogElement>('#install-help');
+  const steps = document.getElementById('install-steps');
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(navigator.userAgent);
+  const installed = () => window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  let prompt: InstallPrompt | undefined;
+  function hideInstall() {
+    if (reminder) reminder.hidden = true;
+    if (installLink) installLink.hidden = true;
+  }
+  window.addEventListener('appinstalled',hideInstall);
+  window.addEventListener('beforeinstallprompt', event => {
+    if ((!ios && !android) || installed()) return;
+    event.preventDefault();
+    prompt = event as InstallPrompt;
+  });
+  if ((ios || android) && !installed() && reminder && installLink) {
+    reminder.hidden = false;
+    installLink.hidden = false;
+    window.setTimeout(() => {
+      if (reminder.contains(document.activeElement)) {
+        reminder.addEventListener('focusout', () => { reminder.hidden = true; }, {once:true});
+      } else {
+        reminder.hidden = true;
+      }
+    },3000);
+    for (const button of document.querySelectorAll('[data-install]')) {
+      button.addEventListener('click', async () => {
+        if (prompt) {
+          const current = prompt;
+          prompt = undefined;
+          try {
+            const result = await current.prompt();
+            if (result.outcome === 'accepted') hideInstall();
+            return;
+          } catch {
+            // Show manual steps if the browser declines to open its install prompt.
+          }
+        }
+        if (!help || !steps || help.open) return;
+        steps.textContent = ios
+          ? 'Open this page in Safari. Tap Share, then Add to Home Screen. Turn on Open as Web App if shown, then tap Add.'
+          : 'Open this page in Chrome. Tap the three-dot menu, then Add to home screen or Install app.';
+        help.showModal();
+      });
+    }
+  }
 </script>
 <style>
   :global(body) {
@@ -241,4 +304,14 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   }
   nav a:hover, nav a:focus-visible { background:#b3efe9; color:#101010; }
   .scripture-credit { border-top:1px solid #cfe8e4; padding:14px 0 22px; color:#475654; }
+  #install-reminder {
+    position:fixed; z-index:2; bottom:calc(66px + env(safe-area-inset-bottom));
+    inset-inline-end:12px; box-shadow:0 4px 18px #0003; border-radius:9px;
+  }
+  [data-install], #install-help button {
+    font:inherit; font-weight:700; min-height:44px; padding:6px 14px;
+    border:1px solid #105e56; border-radius:9px; color:#101010; background:#41cfc1; cursor:pointer;
+  }
+  #install-help { width:min(400px,calc(100% - 64px)); border:0; border-radius:14px; padding:22px; }
+  #install-help::backdrop { background:#0008; }
 </style>
