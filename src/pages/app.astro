@@ -38,6 +38,20 @@ const banners = (bulletin.banners ?? []).map((banner: { image: string; descripti
   description: banner.description,
   url: bulletinLink(banner.url),
 })).filter(banner => banner.image);
+function agendaUrl(value?: string) {
+  try {
+    const url = new URL(value?.trim() ?? '');
+    if (url.origin !== 'https://calendar.google.com' || url.pathname !== '/calendar/embed' ||
+        !url.searchParams.get('src')) return '';
+    url.searchParams.set('mode', 'AGENDA');
+    url.searchParams.set('ctz', 'America/Chicago');
+    url.searchParams.set('showTitle', '0');
+    return url.href;
+  } catch {
+    return '';
+  }
+}
+const calendarUrl = agendaUrl((sunday as { calendarUrl?: string }).calendarUrl);
 const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
 const events = (await getCollection('events'))
   .filter(({ data }) => data.date.toISOString().slice(0, 10) >= today)
@@ -113,8 +127,8 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
       {!bulletin.text?.trim() && !announcements.length && !banners.length && <p>The weekly bulletin will appear here when it’s published.</p>}
     </section>
     <section id="events" class="guide-section">
-      <h2>Coming Up at ICBC</h2>
-      {events.length ? <ul>{events.map(({data}) => <li>
+      <h2>Calendar</h2>
+      {calendarUrl ? <iframe class="calendar-agenda" src={calendarUrl} title="ICBC Google Calendar agenda" loading="lazy"></iframe> : events.length ? <ul>{events.map(({data}) => <li>
         <strong>{data.title}</strong>
         <p>{data.date.toLocaleDateString('en-US', {month:'long', day:'numeric', timeZone:'UTC'})} · {data.time} · {data.location}</p>
         <p>{data.description}</p>
@@ -327,7 +341,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   summary { list-style:none; }
   summary::-webkit-details-marker { display:none; }
   .passages li { padding:0; }
-  .read-passage, .hide-passage { background:#087268; color:#fff; border-radius:7px; padding:.25rem .65rem; }
+  .read-passage, .hide-passage { background:#41cfc1; color:#fff; text-shadow:0 1px 2px #06423c, 0 0 2px #06423c; border-radius:7px; padding:.25rem .65rem; }
   .hide-passage, .passage[open] .read-passage { display:none; }
   .passage[open] .hide-passage { display:inline; }
   .translation { color:#11675e; font-weight:700; }
@@ -349,6 +363,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .live-badge { display:inline-block; border-radius:999px; color:#fff; background:#b42318; padding:.25rem .7rem; }
   .live-badge::before { content:'● '; }
   #archive-playing { margin:.5rem 0; }
+  .calendar-agenda { display:block; width:100%; height:540px; border:1px solid #cfe8e4; border-radius:10px; box-sizing:border-box; }
   .bulletin-text { white-space:pre-line; }
   summary { cursor:pointer; color:#11655d; font-weight:700; padding:.65rem 0; }
   ul { list-style:none; padding:0; }
