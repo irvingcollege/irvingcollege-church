@@ -6,7 +6,13 @@
   "scriptures": [
     {
       "translation": "CSB",
-      "reference": "Matthew 3:1-5, John 3:16"
+      "reference": "Matthew 1",
+      "text": "Hello"
+    },
+    {
+      "translation": "CSB",
+      "reference": "Matthew 2",
+      "text": "Bye"
     }
   ]
 }
