@@ -106,13 +106,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
           </article>;
         })}
       </div>}
-      {bulletin.pdf && <details>
-        <summary>View bulletin PDF</summary>
-        <object class="bulletin-pdf" data={bulletin.pdf} type="application/pdf" aria-label={bulletin.title}>
-          <p>This browser can’t display the PDF here. <a href={bulletin.pdf}>Open bulletin PDF</a></p>
-        </object>
-      </details>}
-      {!bulletin.text?.trim() && !announcements.length && !banners.length && !bulletin.pdf && <p>The weekly bulletin will appear here when it’s published.</p>}
+      {!bulletin.text?.trim() && !announcements.length && !banners.length && <p>The weekly bulletin will appear here when it’s published.</p>}
     </section>
     <section id="events" class="guide-section">
       <h2>Coming Up at ICBC</h2>
@@ -234,7 +228,6 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   #sunday-live-player :global(iframe) { display:block; width:100%; aspect-ratio:16/9; border:0; border-radius:8px; background:#143b38; }
   .bulletin-text { white-space:pre-line; }
   summary { cursor:pointer; color:#11655d; font-weight:700; padding:.65rem 0; }
-  .bulletin-pdf { display:block; width:100%; height:65vh; border:1px solid #d6e8e3; border-radius:8px; box-sizing:border-box; }
   ul { list-style:none; padding:0; }
   li { border-bottom:1px solid #dce4dc; padding:12px 0; }
   li p { margin:.2rem 0; }
