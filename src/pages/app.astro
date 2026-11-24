@@ -54,14 +54,12 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   <link rel="apple-touch-icon" href="/images/sunday-icon.png" />
   <link rel="icon" href="/images/sunday-icon.png" />
   <link rel="manifest" href="/sunday.webmanifest" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;display=swap" />
   <title>This Sunday | Irving College Baptist Church</title>
 </head>
 <body>
   <header>
     <a href="/" class="church-wordmark" aria-label="Irving College Baptist Church home">
-      <span class="wordmark-name">Irving College</span>
-      <span class="wordmark-type">Baptist<br />Church</span>
+      <img src="/images/sunday-header.png" alt="Irving College Baptist Church" width="1560" height="450" />
     </a>
   </header>
   <div class="cover">
@@ -188,21 +186,8 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     padding-bottom: calc(70px + env(safe-area-inset-bottom));
   }
   header { background: #41cfc1; color: #101010; }
-  .church-wordmark {
-    display:flex; align-items:center; gap:clamp(8px,2.3vw,18px);
-    max-width:940px; margin:auto; padding:10px clamp(12px,4vw,22px);
-    color:inherit; text-decoration:none; text-transform:uppercase;
-    font-family:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
-  }
-  .wordmark-name {
-    white-space:nowrap; font-size:clamp(1.2rem,7vw,3.6rem);
-    font-weight:700; line-height:.95; letter-spacing:-.015em;
-  }
-  .wordmark-type {
-    border-left:1px solid currentColor; padding-left:clamp(8px,2.3vw,18px);
-    font-size:clamp(.64rem,2.7vw,1.18rem); font-weight:600;
-    line-height:1; letter-spacing:.09em;
-  }
+  .church-wordmark { display:block; max-width:940px; margin:auto; }
+  .church-wordmark img { display:block; width:100%; height:auto; }
   .cover { background: #41cfc1; }
   .cover img {
     display: block; width: 100%; max-width: 1200px; height: clamp(170px, 37vw, 405px);
