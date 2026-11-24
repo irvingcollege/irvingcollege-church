@@ -67,7 +67,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   </div>
   <main>
     <section id="message" class="hero">
-      <p>This Sunday at ICBC{sunday.date && <> · <time datetime={sunday.date}>{sunday.date}</time></>}</p>
+
       <h1>{sunday.title}</h1>
     </section>
     <section id="scripture" class="guide-section">
@@ -196,7 +196,6 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   main { max-width: 940px; margin: auto; padding: 0 clamp(20px, 5vw, 54px); }
   section { scroll-margin-top: 14px; }
   .hero { position: relative; padding: clamp(26px, 5vw, 56px) 0; }
-  .hero p:first-child { color: #11675e; font-weight: 750; margin: 0; }
   h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 500; }
   h1 { font-size: clamp(2.65rem, 9vw, 6.1rem); line-height: .99; letter-spacing: -.055em; margin: .22em 0; }
   h2 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.07; letter-spacing: -.035em; margin: 0 0 .55em; }
