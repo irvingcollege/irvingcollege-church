@@ -184,6 +184,6 @@ collections:
             widget: list
             required: false
             fields:
-              - { label: Reference, name: reference, widget: string, hint: "Example: Psalm 119:105–106" }
-              - { label: Verse text, name: text, widget: text, hint: "Paste the verses as you want them to appear." }
+              - { label: Reference, name: reference, widget: string, hint: "Use a full book name, like Psalm 119:105–106. Add a separate item for each chapter." }
+              - { label: Verse text, name: text, widget: text, required: false, hint: "Leave blank to fetch CSB when someone taps Read. Paste text here to use a different translation." }
               - { label: Translation, name: translation, widget: string, required: false, default: CSB }
