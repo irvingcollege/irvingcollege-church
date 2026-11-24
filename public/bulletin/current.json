@@ -1,8 +1,14 @@
 {
   "title": "This Week's Bulletin",
-  "date": "2026-10-25",
+  "date": "2026-11-24",
   "text": "",
+  "banners": [
+    {
+      "image": "images/uploads/original-size-irvingcollege-1560-x-450-px-.png",
+      "url": "https://www.irvingcollege.church/meal",
+      "description": "Wednesday Night Meal"
+    }
+  ],
   "announcements": [],
-  "pdf": "/bulletin/public/bulletin/files/ads-bathroom-3-copy.pdf",
-  "banners": []
+  "pdf": "/bulletin/public/bulletin/files/ads-bathroom-3-copy.pdf"
 }
