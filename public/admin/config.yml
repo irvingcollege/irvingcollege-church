@@ -171,10 +171,6 @@ collections:
               - { label: Image description, name: imageAlt, widget: string, required: false }
               - { label: Button text, name: buttonLabel, widget: string, required: false, hint: "Examples: Sign up or Order a shirt." }
               - { label: Button link, name: buttonUrl, widget: string, required: false, hint: "Paste an HTTPS link or a church website path like /shirts." }
-          - label: Bulletin PDF
-            name: pdf
-            widget: file
-            hint: "Upload your final interactive PDF with clickable announcement links."
 
   - name: sunday_app
     label: Sunday App
