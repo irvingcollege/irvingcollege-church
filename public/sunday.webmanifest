@@ -5,6 +5,6 @@
   "scope": "/app/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#101010",
+  "theme_color": "#41cfc1",
   "icons": [{ "src": "/images/sunday-icon.png", "sizes": "1254x1254", "type": "image/png" }]
 }
