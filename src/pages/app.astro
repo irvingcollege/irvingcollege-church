@@ -1,0 +1,238 @@
+---
+import { getCollection } from 'astro:content';
+import sunday from '../content/sunday/current.json';
+import bulletin from '../../public/bulletin/current.json';
+
+function httpsLink(value: string, fallback: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.href : fallback;
+  } catch {
+    return fallback;
+  }
+}
+type Announcement = {
+  title: string;
+  text?: string;
+  image?: string;
+  imageAlt?: string;
+  buttonLabel?: string;
+  buttonUrl?: string;
+};
+const announcements = (bulletin.announcements ?? []) as Announcement[];
+const siteOrigin = 'https://irvingcollege.church';
+function bulletinLink(value?: string) {
+  if (!value?.trim()) return '';
+  try {
+    const raw = value.trim();
+    const input = raw.startsWith('images/uploads/') ? '/' + raw : raw;
+    const url = input.startsWith('/') ? new URL(input, siteOrigin) : new URL(input);
+    if (url.protocol !== 'https:' || (input.startsWith('/') && url.origin !== siteOrigin)) return '';
+    return url.origin === siteOrigin ? url.pathname + url.search + url.hash : url.href;
+  } catch {
+    return '';
+  }
+}
+const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
+const events = (await getCollection('events'))
+  .filter(({ data }) => data.date.toISOString().slice(0, 10) >= today)
+  .sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
+const scriptures = (sunday.scriptures ?? []) as { reference: string; text: string; translation?: string }[];
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#143b38" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="/images/sunday-icon.png" />
+  <link rel="icon" href="/images/sunday-icon.png" />
+  <link rel="manifest" href="/sunday.webmanifest" />
+  <title>This Sunday | Irving College Baptist Church</title>
+</head>
+<body>
+  <header><a href="/"><img src="/images/sunday-icon.png" alt="" /> Irving College Baptist Church</a></header>
+  <div class="cover">
+    <img src="/images/hero/church-front.jpg" alt="Irving College Baptist Church" width="1672" height="941" fetchpriority="high" />
+  </div>
+  <main>
+    <section id="message" class="hero">
+      <p>This Sunday at ICBC{sunday.date && <> · <time datetime={sunday.date}>{sunday.date}</time></>}</p>
+      <h1>{sunday.title}</h1>
+    </section>
+    <section id="scripture" class="guide-section">
+      <h2>Scripture</h2>
+      {scriptures.length ? <ul class="passages">
+        {scriptures.map((passage, index) => <li>
+          <details class="passage">
+            <summary class="passage-link">
+              {passage.reference}
+              <span class="read-passage" aria-hidden="true">Read</span>
+              <span class="hide-passage" aria-hidden="true">Hide</span>
+            </summary>
+            <p class="translation">{passage.translation?.trim() || "CSB"}</p>
+            <p class="verse-text">{passage.text}</p>
+          </details>
+        </li>)}
+      </ul> : <p>Scripture passages will appear here when they’re published.</p>}
+    </section>
+    <section id="bulletin" class="guide-section">
+      <h2>Weekly Bulletin</h2>
+      {bulletin.text?.trim() && bulletin.text.trim().split(/\r?\n\s*\r?\n/).map(paragraph =>
+        <p class="bulletin-text">{paragraph}</p>
+      )}
+      {announcements.length > 0 && <div class="announcements">
+        {announcements.map(item => {
+          const image = bulletinLink(item.image);
+          const action = bulletinLink(item.buttonUrl);
+          return <article class="announcement">
+            {image && <img src={image} alt={item.imageAlt ?? ''} loading="lazy" decoding="async" />}
+            <div class="announcement-body">
+              <h3>{item.title}</h3>
+              {item.text && <p class="bulletin-text">{item.text}</p>}
+              {action && <a class="action" href={action}>{item.buttonLabel?.trim() || 'View details'}</a>}
+            </div>
+          </article>;
+        })}
+      </div>}
+      {bulletin.pdf && <details>
+        <summary>View bulletin PDF</summary>
+        <object class="bulletin-pdf" data={bulletin.pdf} type="application/pdf" aria-label={bulletin.title}>
+          <p>This browser can’t display the PDF here. <a href={bulletin.pdf}>Open bulletin PDF</a></p>
+        </object>
+      </details>}
+      {!bulletin.text?.trim() && !announcements.length && !bulletin.pdf && <p>The weekly bulletin will appear here when it’s published.</p>}
+    </section>
+    <section id="events" class="guide-section">
+      <h2>Coming Up at ICBC</h2>
+      {events.length ? <ul>{events.map(({data}) => <li>
+        <strong>{data.title}</strong>
+        <p>{data.date.toLocaleDateString('en-US', {month:'long', day:'numeric', timeZone:'UTC'})} · {data.time} · {data.location}</p>
+        <p>{data.description}</p>
+      </li>)}</ul> : <p>Sunday School at 9:30 AM · Sunday Worship at 10:30 AM</p>}
+    </section>
+    <section id="give" class="guide-section">
+      <h2>Give</h2>
+      {httpsLink(sunday.givingUrl, '') && <p><a href={httpsLink(sunday.givingUrl, '')}>Give with Tithe.ly</a></p>}
+      <a href="https://venmo.com/irvingcollege">Give with Venmo</a>
+    </section>
+    <section id="watch" class="guide-section">
+      <h2>Watch Sermons</h2>
+      <div id="sunday-live" hidden>
+        <p role="status"><strong>Live now</strong></p>
+        <div id="sunday-live-player"></div>
+      </div>
+      <p><a href={httpsLink(sunday.watchUrl, 'https://www.youtube.com/@irvingcollege.church')}>Browse past sermons</a></p>
+    </section>
+    {scriptures.some(passage => !passage.translation?.trim() || /^(csb|christian standard bible)$/i.test(passage.translation.trim())) && <footer class="scripture-credit"><small>Scripture quotations marked CSB are from the Christian Standard Bible®, copyright © 2017 by Holman Bible Publishers. Used by permission.</small></footer>}
+  </main>
+  <nav aria-label="Sunday app"><a href="#message">Message</a><a href="#scripture">Scripture</a><a href="#bulletin">Bulletin</a><a href="#events">Events</a><a href="#give">Give</a><a href="#watch">Watch</a></nav>
+</body>
+</html>
+<script>
+  const live = document.getElementById('sunday-live');
+  const player = document.getElementById('sunday-live-player');
+  if (live && player) {
+    let checking = false;
+    const refresh = async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        const response = await fetch('/.netlify/functions/worship-feed', { cache: 'no-store' });
+        if (!response.ok) return;
+        const { online } = await response.json();
+        if (online === true && live.hidden) {
+          const frame = document.createElement('iframe');
+          frame.src = 'https://live.irvingcollege.church/embed/video?autoplay=off';
+          frame.title = 'Irving College Baptist Church livestream';
+          frame.referrerPolicy = 'origin';
+          frame.allow = 'fullscreen; picture-in-picture';
+          frame.allowFullscreen = true;
+          player.replaceChildren(frame);
+          live.hidden = false;
+        } else if (online === false && !live.hidden) {
+          live.hidden = true;
+          player.replaceChildren();
+        }
+      } catch {
+        // Keep any playing stream visible during a temporary connection failure.
+      } finally {
+        checking = false;
+      }
+    };
+    void refresh();
+    window.setInterval(refresh, 30000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) void refresh();
+    });
+  }
+
+</script>
+<style>
+  :global(body) {
+    margin: 0;
+    background: #fbfaf6;
+    color: #142d2b;
+    font: 16px/1.6 system-ui, sans-serif;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+  header { background: #10312e; color: #fff; }
+  header a {
+    display: flex; align-items: center; gap: 12px; max-width: 940px; margin: auto;
+    padding: 12px 22px; color: inherit; text-decoration: none; font-weight: 650;
+  }
+  header img { width: 40px; height: 40px; border-radius: 50%; }
+  .cover { background: #10312e; }
+  .cover img {
+    display: block; width: 100%; max-width: 1200px; height: clamp(170px, 37vw, 405px);
+    object-fit: cover; object-position: center 55%; margin: auto;
+  }
+  main { max-width: 940px; margin: auto; padding: 0 clamp(20px, 5vw, 54px); }
+  section { scroll-margin-top: 14px; }
+  .hero { position: relative; padding: clamp(26px, 5vw, 56px) 0; }
+  .hero p:first-child { color: #11675e; font-weight: 750; margin: 0; }
+  h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 500; }
+  h1 { font-size: clamp(2.65rem, 9vw, 6.1rem); line-height: .99; letter-spacing: -.055em; margin: .22em 0; }
+  h2 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.07; letter-spacing: -.035em; margin: 0 0 .55em; }
+  .guide-section { border-top: 1px solid #cbd8d1; padding: clamp(26px, 5vw, 50px) 0; }
+  .guide-section a { color: #105e56; font-weight: 700; text-underline-offset: .24em; }
+  .passage-link {
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    min-height:48px; box-sizing:border-box; padding:.5rem 0; color:#105e56;
+    font-weight:700; cursor:pointer; list-style:none;
+  }
+  summary { list-style:none; }
+  summary::-webkit-details-marker { display:none; }
+  .passages li { padding:0; }
+  .read-passage, .hide-passage { background:#e5f1e9; border-radius:7px; padding:.25rem .65rem; }
+  .hide-passage, .passage[open] .read-passage { display:none; }
+  .passage[open] .hide-passage { display:inline; }
+  .translation { color:#11675e; font-weight:700; }
+  .verse-text { white-space:pre-wrap; font-size:1.12rem; overflow-wrap:anywhere; }
+  :focus-visible { outline: 3px solid #25897e; outline-offset: 3px; }
+  .announcements { margin: 14px 0; }
+  .announcement { display:flex; align-items:center; gap:clamp(12px,3vw,28px); padding:18px 0; border-bottom:1px solid #dce4dc; }
+  .announcement img { width:clamp(90px,25vw,196px); aspect-ratio:4/3; object-fit:contain; background:#edf2eb; border-radius:8px; }
+  .announcement-body { min-width:0; }
+  .announcement h3 { margin: 0; font-size: clamp(1.08rem, 3vw, 1.38rem); line-height: 1.25; }
+  .announcement p { margin: .35rem 0; }
+  .action { display:inline-flex; align-items:center; min-height:44px; }
+  #sunday-live-player :global(iframe) { display:block; width:100%; aspect-ratio:16/9; border:0; border-radius:8px; background:#143b38; }
+  .bulletin-text { white-space:pre-line; }
+  summary { cursor:pointer; color:#11655d; font-weight:700; padding:.65rem 0; }
+  .bulletin-pdf { display:block; width:100%; height:65vh; border:1px solid #d6e8e3; border-radius:8px; box-sizing:border-box; }
+  ul { list-style:none; padding:0; }
+  li { border-bottom:1px solid #dce4dc; padding:12px 0; }
+  li p { margin:.2rem 0; }
+  nav {
+    position:fixed; z-index:1; bottom:0; inset-inline:0; display:flex; justify-content:center;
+    background:#10312e; padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav a {
+    color:#fff; display:grid; place-content:center; min-height:56px;
+    padding:0 clamp(6px,2vw,21px); font-weight:650; font-size:clamp(.72rem,2.8vw,.9rem); text-decoration:none;
+  }
+  nav a:hover, nav a:focus-visible { background:#245650; }
+  .scripture-credit { border-top:1px solid #cbd8d1; padding:14px 0 22px; color:#48605a; }
+</style>

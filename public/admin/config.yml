@@ -151,7 +151,39 @@ collections:
         fields:
           - { label: Bulletin Title, name: title, widget: string, default: "This Week's Bulletin" }
           - { label: Bulletin Date, name: date, widget: datetime, date_format: "YYYY-MM-DD", time_format: false }
+          - { label: Bulletin text for the Sunday app, name: text, widget: text, required: false, hint: "Shown directly on the Sunday app. Use blank lines between announcements." }
+          - label: Announcement cards
+            name: announcements
+            widget: list
+            required: false
+            fields:
+              - { label: Title, name: title, widget: string }
+              - { label: Details, name: text, widget: text, required: false }
+              - { label: Image, name: image, widget: image, required: false }
+              - { label: Image description, name: imageAlt, widget: string, required: false }
+              - { label: Button text, name: buttonLabel, widget: string, required: false, hint: "Examples: Sign up or Order a shirt." }
+              - { label: Button link, name: buttonUrl, widget: string, required: false, hint: "Paste an HTTPS link or a church website path like /shirts." }
           - label: Bulletin PDF
             name: pdf
             widget: file
             hint: "Upload your final interactive PDF with clickable announcement links."
+
+  - name: sunday_app
+    label: Sunday App
+    files:
+      - name: current
+        label: This Sunday
+        file: src/content/sunday/current.json
+        fields:
+          - { label: Message title, name: title, widget: string }
+          - { label: Service date (YYYY-MM-DD), name: date, widget: string, required: false }
+          - { label: Past sermons link, name: watchUrl, widget: string, required: false }
+          - { label: Tithe.ly giving link, name: givingUrl, widget: string, required: false }
+          - label: Scripture passages
+            name: scriptures
+            widget: list
+            required: false
+            fields:
+              - { label: Reference, name: reference, widget: string, hint: "Example: Psalm 119:105–106" }
+              - { label: Verse text, name: text, widget: text, hint: "Paste the verses as you want them to appear." }
+              - { label: Translation, name: translation, widget: string, required: false, default: CSB }

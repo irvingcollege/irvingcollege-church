@@ -1,0 +1,10 @@
+{
+  "name": "Irving College Baptist Church",
+  "short_name": "ICBC Sunday",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "background_color": "#eff5f3",
+  "theme_color": "#143b38",
+  "icons": [{ "src": "/images/sunday-icon.png", "sizes": "1254x1254", "type": "image/png" }]
+}
