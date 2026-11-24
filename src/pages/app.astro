@@ -1,6 +1,5 @@
 ---
 import { getCollection } from 'astro:content';
-import { passageId } from '../lib/scripture-reference.mjs';
 import sunday from '../content/sunday/current.json';
 import bulletin from '../../public/bulletin/current.json';
 
@@ -38,7 +37,7 @@ const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).
 const events = (await getCollection('events'))
   .filter(({ data }) => data.date.toISOString().slice(0, 10) >= today)
   .sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
-const scriptures = (sunday.scriptures ?? []) as { reference: string; text?: string; translation?: string }[];
+const scriptures = (sunday.scriptures ?? []) as { reference: string; text: string; translation?: string }[];
 ---
 <!doctype html>
 <html lang="en">
@@ -66,15 +65,14 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text?: stri
       <h2>Scripture</h2>
       {scriptures.length ? <ul class="passages">
         {scriptures.map((passage, index) => <li>
-          <details class="passage" data-scripture={passage.text?.trim() ? undefined : passage.reference}>
+          <details class="passage">
             <summary class="passage-link">
               {passage.reference}
               <span class="read-passage" aria-hidden="true">Read</span>
               <span class="hide-passage" aria-hidden="true">Hide</span>
             </summary>
-            <p class="translation">{passage.text?.trim() ? passage.translation?.trim() || "CSB" : "CSB"}</p>
-            <p class="verse-text" aria-live="polite">{passage.text}</p>
-            {!passage.text?.trim() && <p><a data-scripture-fallback href={passageId(passage.reference) ? `https://www.bible.com/bible/1713/${passageId(passage.reference)}` : `https://www.bible.com/search/bible?q=${encodeURIComponent(passage.reference)}`}>Find this passage on Bible.com</a></p>}
+            <p class="translation">{passage.translation?.trim() || "CSB"}</p>
+            <p class="verse-text">{passage.text}</p>
           </details>
         </li>)}
       </ul> : <p>Scripture passages will appear here when they’re published.</p>}
@@ -127,7 +125,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text?: stri
       </div>
       <p><a href={httpsLink(sunday.watchUrl, 'https://www.youtube.com/@irvingcollege.church')}>Browse past sermons</a></p>
     </section>
-    {scriptures.some(passage => !passage.text?.trim() || !passage.translation?.trim() || /^(csb|christian standard bible)$/i.test(passage.translation.trim())) && <footer class="scripture-credit"><small>Scripture quotations marked CSB are from the Christian Standard Bible®, copyright © 2017 by Holman Bible Publishers. Used by permission.</small></footer>}
+    {scriptures.some(passage => !passage.translation?.trim() || /^(csb|christian standard bible)$/i.test(passage.translation.trim())) && <footer class="scripture-credit"><small>Scripture quotations marked CSB are from the Christian Standard Bible®, copyright © 2017 by Holman Bible Publishers. Used by permission.</small></footer>}
   </main>
   <nav aria-label="Sunday app"><a href="#message">Message</a><a href="#scripture">Scripture</a><a href="#bulletin">Bulletin</a><a href="#events">Events</a><a href="#give">Give</a><a href="#watch">Watch</a></nav>
 </body>
@@ -170,34 +168,6 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text?: stri
     });
   }
 
-  const scriptureRequests = new Map<string, Promise<string>>();
-  for (const passage of document.querySelectorAll<HTMLDetailsElement>('[data-scripture]')) {
-    passage.addEventListener('toggle', async () => {
-      const reference = passage.dataset.scripture;
-      const text = passage.querySelector('.verse-text');
-      if (!passage.open || !reference || !text || passage.dataset.loaded) return;
-      text.textContent = 'Loading CSB passage…';
-      const query = new URLSearchParams({reference});
-      let result = scriptureRequests.get(reference);
-      if (!result) {
-        result = fetch('/.netlify/functions/sunday-scripture?' + query)
-          .then(async response => {
-            if (!response.ok) throw new Error('Scripture unavailable');
-            const data = await response.json();
-            if (typeof data.text !== 'string') throw new Error('Missing passage text');
-            return data.text as string;
-          });
-        scriptureRequests.set(reference,result);
-      }
-      try {
-        text.textContent = await result;
-        passage.dataset.loaded = 'true';
-      } catch {
-        scriptureRequests.delete(reference);
-        text.textContent = 'The CSB passage couldn’t load here.';
-      }
-    });
-  }
 </script>
 <style>
   :global(body) {
