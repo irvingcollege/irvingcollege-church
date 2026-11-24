@@ -152,6 +152,14 @@ collections:
           - { label: Bulletin Title, name: title, widget: string, default: "This Week's Bulletin" }
           - { label: Bulletin Date, name: date, widget: datetime, date_format: "YYYY-MM-DD", time_format: false }
           - { label: Bulletin text for the Sunday app, name: text, widget: text, required: false, hint: "Shown directly on the Sunday app. Use blank lines between announcements." }
+          - label: Wide banners
+            name: banners
+            widget: list
+            required: false
+            fields:
+              - { label: Banner PNG, name: image, widget: image, hint: "Upload a 1560 × 450 PNG." }
+              - { label: Banner description, name: description, widget: string, hint: "Include the key information shown in the image." }
+              - { label: Optional page link, name: url, widget: string, required: false, hint: "Use an HTTPS link or a church website path like /shirts." }
           - label: Announcement cards
             name: announcements
             widget: list

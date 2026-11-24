@@ -33,6 +33,11 @@ function bulletinLink(value?: string) {
     return '';
   }
 }
+const banners = (bulletin.banners ?? []).map((banner: { image: string; description: string; url?: string }) => ({
+  image: bulletinLink(banner.image),
+  description: banner.description,
+  url: bulletinLink(banner.url),
+})).filter(banner => banner.image);
 const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
 const events = (await getCollection('events'))
   .filter(({ data }) => data.date.toISOString().slice(0, 10) >= today)
@@ -82,6 +87,11 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
       {bulletin.text?.trim() && bulletin.text.trim().split(/\r?\n\s*\r?\n/).map(paragraph =>
         <p class="bulletin-text">{paragraph}</p>
       )}
+      {banners.length > 0 && <div class="bulletin-banners">
+        {banners.map(banner => banner.url ? (
+          <a href={banner.url}><img src={banner.image} alt={banner.description} width="1560" height="450" loading="lazy" decoding="async" /></a>
+        ) : <img src={banner.image} alt={banner.description} width="1560" height="450" loading="lazy" decoding="async" />)}
+      </div>}
       {announcements.length > 0 && <div class="announcements">
         {announcements.map(item => {
           const image = bulletinLink(item.image);
@@ -102,7 +112,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
           <p>This browser can’t display the PDF here. <a href={bulletin.pdf}>Open bulletin PDF</a></p>
         </object>
       </details>}
-      {!bulletin.text?.trim() && !announcements.length && !bulletin.pdf && <p>The weekly bulletin will appear here when it’s published.</p>}
+      {!bulletin.text?.trim() && !announcements.length && !banners.length && !bulletin.pdf && <p>The weekly bulletin will appear here when it’s published.</p>}
     </section>
     <section id="events" class="guide-section">
       <h2>Coming Up at ICBC</h2>
@@ -211,6 +221,9 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .translation { color:#11675e; font-weight:700; }
   .verse-text { white-space:pre-wrap; font-size:1.12rem; overflow-wrap:anywhere; }
   :focus-visible { outline: 3px solid #25897e; outline-offset: 3px; }
+  .bulletin-banners { display:grid; gap:14px; margin:18px 0; }
+  .bulletin-banners a { display:block; }
+  .bulletin-banners img { display:block; width:100%; height:auto; border-radius:8px; }
   .announcements { margin: 14px 0; }
   .announcement { display:flex; align-items:center; gap:clamp(12px,3vw,28px); padding:18px 0; border-bottom:1px solid #dce4dc; }
   .announcement img { width:clamp(90px,25vw,196px); aspect-ratio:4/3; object-fit:contain; background:#edf2eb; border-radius:8px; }
