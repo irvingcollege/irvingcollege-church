@@ -72,7 +72,10 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
 <body>
   <header>
     <a href="/" class="church-wordmark" aria-label="Irving College Baptist Church home">
-      <img src="/images/sunday-header.png?v=2" alt="Irving College Baptist Church" width="1560" height="225" />
+      <picture>
+        <source media="(max-width: 600px)" srcset="/images/sunday-header-mobile.png" width="1000" height="225" />
+        <img src="/images/sunday-header.png?v=3" alt="Irving College Baptist Church" width="1560" height="225" fetchpriority="high" decoding="sync" />
+      </picture>
     </a>
     <button id="notification-bell" type="button" aria-label="Church notifications" title="Church notifications">
       <svg aria-hidden="true" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
@@ -420,7 +423,8 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   #notification-help form { margin-top:12px; }
   header { background: #41cfc1; color: #101010; }
   .church-wordmark { display:block; max-width:940px; margin:auto; }
-  .church-wordmark img { display:block; width:100%; height:auto; }
+  .church-wordmark picture, .church-wordmark img { display:block; }
+  .church-wordmark img { width:100%; height:auto; }
   .cover { background: #101c2d; }
   .cover img {
     display: block; width: 100%; max-width: 1200px; height: clamp(170px, 37vw, 405px);
