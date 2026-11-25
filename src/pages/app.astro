@@ -412,6 +412,14 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     font: 16px/1.6 system-ui, sans-serif;
     padding-bottom: calc(70px + env(safe-area-inset-bottom));
   }
+  @media (max-width:600px) {
+    :global(body)::before {
+      content:"";
+      display:block;
+      height:max(48px, env(safe-area-inset-top));
+      background:#101c2d;
+    }
+  }
   header { position:relative; }
   .church-wordmark { box-sizing:border-box; width:100%; padding-right:52px; }
   #notification-bell { position:absolute; right:8px; top:50%; transform:translateY(-50%); min-width:44px; min-height:44px; display:grid; place-items:center; background:transparent; color:#101010; border:0; border-radius:8px; cursor:pointer; }
