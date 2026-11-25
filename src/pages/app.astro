@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
+import { loadCalendarEvents } from '../lib/sunday-agenda.mjs';
 import sunday from '../content/sunday/current.json';
+import calendarSnapshot from '../content/sunday/calendar-snapshot.json';
 import bulletin from '../../public/bulletin/current.json';
 
 function httpsLink(value: string, fallback: string) {
@@ -39,11 +41,19 @@ const banners = (bulletin.banners ?? []).map((banner: { image: string; descripti
   description: banner.description,
   url: bulletinLink(banner.url),
 })).filter(banner => banner.image);
-const hasCalendar = Boolean((sunday as { calendarUrl?: string }).calendarUrl?.trim());
-const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
-const events = (await getCollection('events'))
-  .filter(({ data }) => data.date.toISOString().slice(0, 10) >= today)
-  .sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
+const calendarEvents = await loadCalendarEvents(sunday.calendarUrl);
+const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Chicago' }).format(new Date());
+const endDate = new Date(today + 'T00:00:00Z');
+endDate.setUTCDate(endDate.getUTCDate() + 42);
+const end = endDate.toISOString().slice(0, 10);
+const fallbackEvents = calendarSnapshot.length ? calendarSnapshot : (await getCollection('events'))
+  .map(({ data }) => ({ ...data, date: data.date.toISOString().slice(0, 10) }));
+const events = (calendarEvents ?? fallbackEvents)
+  .filter(({ date }) => date >= today && date <= end)
+  .sort((a, b) => a.date.localeCompare(b.date));
+const eventDateFormat = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC',
+});
 const scriptures = (sunday.scriptures ?? []) as { reference: string; text: string; translation?: string }[];
 ---
 <!doctype html>
@@ -80,15 +90,18 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
       <h2>Scripture</h2>
       {scriptures.length ? <ul class="passages">
         {scriptures.map((passage, index) => <li>
-          <details class="passage">
-            <summary class="passage-link">
-              {passage.reference}
-              <span class="read-passage" aria-hidden="true">Read</span>
-              <span class="hide-passage" aria-hidden="true">Hide</span>
-            </summary>
+          <button type="button" class="passage-link" data-passage-dialog={`passage-dialog-${index}`} aria-haspopup="dialog">
+            <span>{passage.reference}</span>
+            <span class="read-passage">Read</span>
+          </button>
+          <dialog class="scripture-dialog" id={`passage-dialog-${index}`} aria-labelledby={`passage-title-${index}`}>
+            <div class="scripture-dialog-header">
+              <h2 id={`passage-title-${index}`}>{passage.reference}</h2>
+              <form method="dialog"><button class="read-passage" autofocus>Close</button></form>
+            </div>
             <p class="translation">{passage.translation?.trim() || "CSB"}</p>
             <p class="verse-text">{passage.text}</p>
-          </details>
+          </dialog>
         </li>)}
       </ul> : <p>Scripture passages will appear here when they’re published.</p>}
     </section>
@@ -118,21 +131,21 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
       </div>}
       {!bulletin.text?.trim() && !announcements.length && !banners.length && <p>The weekly bulletin will appear here when it’s published.</p>}
     </section>
-    <section id="events" class="guide-section" data-calendar={hasCalendar ? "google" : undefined}>
+    <section id="events" class="guide-section">
       <h2>Calendar</h2>
       <div id="event-list">
-      {events.length ? <ul>{events.map(({data}) => <li>
-        <strong>{data.title}</strong>
-        <p>{data.date.toLocaleDateString('en-US', {month:'long', day:'numeric', timeZone:'UTC'})} · {data.time} · {data.location}</p>
-        <p>{data.description}</p>
-      </li>)}</ul> : <p>Sunday School at 9:30 AM · Sunday Worship at 10:30 AM</p>}
+        {events.length ? <ul>{events.map(event => <li class="calendar-announcement">
+          <h3>{event.title}</h3>
+          <p class="event-details">{[eventDateFormat.format(new Date(event.date + 'T00:00:00Z')), event.time, event.location].filter(Boolean).join(' · ')}</p>
+          {event.description && <p>{event.description}</p>}
+        </li>)}</ul> : <p>No events are scheduled in the next six weeks.</p>}
       </div>
     </section>
     <section id="give" class="guide-section">
       <h2>Give</h2>
-      {httpsLink(sunday.planningCenterGivingUrl, '') && <p><a href={httpsLink(sunday.planningCenterGivingUrl, '')} aria-label="Give with Church Center" style="display:inline-flex;align-items:center;min-height:44px"><img src="/images/church-center-logo.svg" width="164" alt="" style="display:block;height:auto"></a></p>}
+      {httpsLink(sunday.planningCenterGivingUrl, '') && <p><a href={httpsLink(sunday.planningCenterGivingUrl, '')} aria-label="Give with Church Center" style="display:inline-flex;align-items:center;min-height:44px"><img src="/images/church-center-logo-white.svg" width="164" alt="" style="display:block;height:auto"></a></p>}
       {httpsLink(sunday.givingUrl, '') && <p><a href={httpsLink(sunday.givingUrl, '')}>Give with Tithe.ly</a></p>}
-      <a href="https://venmo.com/irvingcollege" aria-label="Give with Venmo" style="display:inline-flex;align-items:center;min-height:44px"><img src="/images/venmo-logo.png" width="92" alt="" style="display:block;height:auto"></a>
+      <a href="https://venmo.com/irvingcollege" aria-label="Give with Venmo" style="display:inline-flex;align-items:center;min-height:44px"><img src="/images/venmo-logo-white.png" width="92" alt="" style="display:block;height:auto"></a>
     </section>
     <section id="watch" class="guide-section">
       <h2>Watch</h2>
@@ -169,41 +182,6 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
 </body>
 </html>
 <script>
-  const eventList = document.querySelector('#events[data-calendar="google"] #event-list');
-  if (eventList) {
-    const formatDay = new Intl.DateTimeFormat('en-US', {
-      weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC',
-    });
-    fetch('/.netlify/functions/sunday-agenda').then(async response => {
-      if (!response.ok) return;
-      const { events } = await response.json();
-      if (!Array.isArray(events)) return;
-      if (!events.length) {
-        const message = document.createElement('p');
-        message.textContent = 'No events are scheduled in the next six weeks.';
-        eventList.replaceChildren(message);
-        return;
-      }
-      const list = document.createElement('ul');
-      for (const event of events) {
-        const row = document.createElement('li');
-        const title = document.createElement('strong');
-        const details = document.createElement('p');
-        title.textContent = event.title;
-        const date = formatDay.format(new Date(event.date + 'T00:00:00Z'));
-        details.textContent = [date, event.time, event.location].filter(Boolean).join(' · ');
-        row.append(title, details);
-        if (event.description) {
-          const description = document.createElement('p');
-          description.textContent = event.description;
-          row.append(description);
-        }
-        list.append(row);
-      }
-      eventList.replaceChildren(list);
-    }).catch(() => { /* Keep the bulletin events if the calendar is unavailable. */ });
-  }
-
   const archiveStatus = document.getElementById('archive-status')!;
   const archiveSelect = document.querySelector<HTMLSelectElement>('#archive-select')!;
   const archivePlayer = document.getElementById('archive-player')!;
@@ -345,6 +323,25 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     }
   }
 </script>
+<script is:inline id="scripture-dialog-script">
+  document.querySelectorAll('[data-passage-dialog]').forEach(button => {
+    button.addEventListener('click', () => {
+      const dialog = document.getElementById(button.dataset.passageDialog);
+      if (dialog && !dialog.open) {
+        dialog.showModal();
+        dialog.scrollTop = 0;
+      }
+    });
+  });
+  document.querySelectorAll('.scripture-dialog').forEach(dialog => {
+    dialog.addEventListener('click', event => {
+      if (event.target !== dialog) return;
+      const rect = dialog.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right ||
+          event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
+    });
+  });
+</script>
 <script is:inline define:vars={{ pushAppId }}>
   const bell = document.getElementById('notification-bell');
   const dialog = document.getElementById('notification-help');
@@ -407,8 +404,8 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
 <style>
   :global(body) {
     margin: 0;
-    background: #ffffff;
-    color: #101010;
+    background: #101c2d;
+    color: #f7fafc;
     font: 16px/1.6 system-ui, sans-serif;
     padding-bottom: calc(70px + env(safe-area-inset-bottom));
   }
@@ -424,7 +421,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   header { background: #41cfc1; color: #101010; }
   .church-wordmark { display:block; max-width:940px; margin:auto; }
   .church-wordmark img { display:block; width:100%; height:auto; }
-  .cover { background: #41cfc1; }
+  .cover { background: #101c2d; }
   .cover img {
     display: block; width: 100%; max-width: 1200px; height: clamp(170px, 37vw, 405px);
     object-fit: cover; object-position: center 55%; margin: auto;
@@ -435,27 +432,33 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   h1, h2 { font-family: system-ui, sans-serif; font-weight: 700; }
   h1 { font-size: clamp(2.35rem, 7vw, 4.75rem); line-height: 1.08; letter-spacing: -.045em; margin: .22em 0; }
   h2 { font-size: clamp(1.65rem, 4vw, 2.65rem); line-height: 1.15; letter-spacing: -.035em; margin: 0 0 .55em; }
-  .guide-section { border-top: 1px solid #cfe8e4; padding: clamp(26px, 5vw, 50px) 0; }
-  .guide-section a { color: #105e56; font-weight: 700; text-underline-offset: .24em; }
+  .guide-section { border-top: 1px solid #35475a; padding: clamp(26px, 5vw, 50px) 0; }
+  .guide-section a { color: #41cfc1; font-weight: 700; text-underline-offset: .24em; }
   .passage-link {
     display:flex; justify-content:space-between; align-items:center; gap:12px;
-    min-height:48px; box-sizing:border-box; padding:.5rem 0; color:#105e56;
+    width:100%; min-height:48px; box-sizing:border-box; padding:.5rem 0; color:#f7fafc; background:transparent; border:0; font:inherit; text-align:left;
     font-weight:700; cursor:pointer; list-style:none;
   }
   summary { list-style:none; }
   summary::-webkit-details-marker { display:none; }
+  .passages { list-style:none; padding:0; }
   .passages li { padding:0; }
-  .read-passage, .hide-passage { background:#41cfc1; color:#fff; text-shadow:0 1px 2px #06423c, 0 0 2px #06423c; border-radius:7px; padding:.25rem .65rem; }
-  .hide-passage, .passage[open] .read-passage { display:none; }
-  .passage[open] .hide-passage { display:inline; }
-  .translation { color:#11675e; font-weight:700; }
+  .read-passage { background:#fff; color:#101010; text-shadow:none; border:0; border-radius:7px; padding:.25rem .75rem; font:inherit; font-weight:700; }
+  .scripture-dialog { color:#f7fafc; background:#192b40; border:1px solid #35475a; border-radius:20px; box-sizing:border-box; width:min(540px,calc(100% - 32px)); max-height:80vh; max-height:80dvh; padding:clamp(18px,4vw,30px); overflow-y:auto; box-shadow:0 16px 48px #0007; }
+  .scripture-dialog::backdrop { background:rgba(0,0,0,.62); }
+  .scripture-dialog-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .scripture-dialog-header h2 { margin:0; font-size:clamp(1.4rem,5vw,2rem); }
+  .scripture-dialog-header form { margin:0; }
+  .scripture-dialog-header button { min-height:44px; cursor:pointer; }
+  :global(body:has(.scripture-dialog[open])) { overflow:hidden; }
+  .translation { color:#41cfc1; font-weight:700; }
   .verse-text { white-space:pre-wrap; font-size:1.12rem; overflow-wrap:anywhere; }
-  :focus-visible { outline: 3px solid #087970; outline-offset: 3px; }
+  :focus-visible { outline: 3px solid #41cfc1; outline-offset: 3px; }
   .bulletin-banners { display:grid; gap:14px; margin:18px 0; }
   .bulletin-banners a { display:block; }
   .bulletin-banners img { display:block; width:100%; height:auto; border-radius:8px; }
   .announcements { margin: 14px 0; }
-  .announcement { display:flex; align-items:center; gap:clamp(12px,3vw,28px); padding:18px 0; border-bottom:1px solid #deeeeb; }
+  .announcement { display:flex; align-items:center; gap:clamp(12px,3vw,28px); padding:18px 0; border-bottom:1px solid #35475a; }
   .announcement img { width:clamp(90px,25vw,196px); aspect-ratio:4/3; object-fit:contain; background:#edfafa; border-radius:8px; }
   .announcement-body { min-width:0; }
   .announcement h3 { margin: 0; font-size: clamp(1.08rem, 3vw, 1.38rem); line-height: 1.25; }
@@ -463,14 +466,17 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .action { display:inline-flex; align-items:center; min-height:44px; }
   #sunday-live-player :global(iframe) { display:block; width:100%; aspect-ratio:16/9; border:0; border-radius:8px; background:#101010; }
   #archive-video { display:block; width:100%; aspect-ratio:16/9; background:#101010; border-radius:8px; }
-  #archive-select { width:100%; min-height:48px; font:inherit; padding:8px 12px; border:1px solid #24867d; border-radius:8px; color:#101010; background:#e5f8f6; }
+  #give a[aria-label] { padding:6px 0; }
+  #archive-select { width:100%; min-height:48px; font:inherit; padding:8px 12px; border:1px solid #24867d; border-radius:8px; color:#101010; background:#fff; }
   .live-badge { display:inline-block; border-radius:999px; color:#fff; background:#b42318; padding:.25rem .7rem; }
   .live-badge::before { content:'● '; }
   #archive-playing { margin:.5rem 0; }
   .bulletin-text { white-space:pre-line; }
-  summary { cursor:pointer; color:#11655d; font-weight:700; padding:.65rem 0; }
-  #event-list :global(ul) { list-style:none; padding:0; }
-  #event-list :global(li) { border-bottom:1px solid #deeeeb; padding:12px 0; }
+  summary { cursor:pointer; color:#f7fafc; font-weight:700; padding:.65rem 0; }
+  #event-list :global(ul) { list-style:none; padding:0; margin:0; }
+  .calendar-announcement h3 { margin:0 0 .3rem; font-size:1.2rem; line-height:1.3; }
+  .event-details { color:#41cfc1; font-size:.92rem; font-weight:650; }
+  #event-list :global(li) { border-bottom:1px solid #35475a; padding:16px 0; }
   #event-list :global(li p) { white-space:pre-line; margin:.2rem 0; }
   nav {
     position:fixed; z-index:1; bottom:0; inset-inline:0; display:flex; justify-content:center;
@@ -481,7 +487,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     padding:0 clamp(6px,2vw,21px); font-weight:650; font-size:clamp(.72rem,2.8vw,.9rem); text-decoration:none;
   }
   nav a:hover, nav a:focus-visible { background:#b3efe9; color:#101010; }
-  .scripture-credit { border-top:1px solid #cfe8e4; padding:14px 0 22px; color:#475654; }
+  .scripture-credit { border-top:1px solid #35475a; padding:14px 0 22px; color:#cbd5e1; }
   #install-reminder {
     position:fixed; z-index:2; bottom:calc(66px + env(safe-area-inset-bottom));
     inset-inline-end:12px; box-shadow:0 4px 18px #0003; border-radius:9px;

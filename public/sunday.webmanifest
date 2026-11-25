@@ -4,7 +4,7 @@
   "start_url": "/app/",
   "scope": "/app/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#101c2d",
   "theme_color": "#41cfc1",
   "icons": [{ "src": "/images/sunday-icon.png", "sizes": "1254x1254", "type": "image/png" }]
 }

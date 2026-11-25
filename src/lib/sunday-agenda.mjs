@@ -1,5 +1,4 @@
 import ical from 'node-ical';
-import sunday from '../../src/content/sunday/current.json' with { type: 'json' };
 
 const zone = 'America/Chicago';
 const dayFormat = new Intl.DateTimeFormat('sv-SE', { timeZone: zone, dateStyle: 'short' });
@@ -21,7 +20,7 @@ export function agenda(source, now = new Date()) {
   const first = dayFormat.format(now);
   const start = new Date(first + 'T00:00:00Z');
   const last = new Date(+start + 42 * dayMs).toISOString().slice(0, 10);
-  const range = { from: new Date(+start - dayMs), to: new Date(+start + 43 * dayMs) };
+  const range = { from: new Date(+start - dayMs), to: new Date(+start + 44 * dayMs) };
 
   return Object.values(ical.sync.parseICS(source))
     .filter(event => event.type === 'VEVENT' && event.start && event.status !== 'CANCELLED')
@@ -30,29 +29,30 @@ export function agenda(source, now = new Date()) {
     .map(instance => ({
       title: instance.summary,
       date: instance.isFullDay ? instance.start.toISOString().slice(0, 10) : dayFormat.format(instance.start),
-      time: instance.isFullDay ? 'All day' : timeFormat.format(instance.start),
+      time: instance.isFullDay ? 'All day' : [instance.start, instance.end && instance.end > instance.start ? instance.end : null].filter(Boolean).map(date => timeFormat.format(date)).join(' – '),
       location: instance.event.location || '',
       description: typeof instance.event.description === 'string' ? instance.event.description : '',
       order: instance.isFullDay ? 0 : +instance.start,
     }))
-    .filter(event => event.date >= first && event.date < last)
+    .filter(event => event.date >= first && event.date <= last)
     .sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order || a.title.localeCompare(b.title))
     .map(({ order, ...event }) => event);
 }
 
-export default async () => {
+// Runs during Astro's build, so the published app contains the event list.
+export async function loadCalendarEvents(calendarUrl) {
+  if (!calendarUrl?.trim()) return null;
   try {
-    const response = await fetch(publicFeed(sunday.calendarUrl), {
+    const response = await fetch(publicFeed(calendarUrl), {
       redirect: 'error',
       signal: AbortSignal.timeout(8000),
     });
-    if (!response.ok) throw new Error('Calendar download failed.');
+    if (!response.ok) throw new Error(`Google Calendar returned ${response.status}.`);
     const body = await response.text();
     if (!body.trimStart().startsWith('BEGIN:VCALENDAR')) throw new Error('Expected an iCalendar feed.');
-    return Response.json({ events: agenda(body) }, {
-      headers: { 'Cache-Control': 'public, max-age=60, s-maxage=900' },
-    });
-  } catch {
-    return Response.json({ error: 'Calendar temporarily unavailable.' }, { status: 502 });
+    return agenda(body);
+  } catch (error) {
+    console.warn('Calendar import unavailable:', error.message);
+    return null;
   }
-};
+}

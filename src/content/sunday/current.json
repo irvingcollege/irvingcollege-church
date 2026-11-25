@@ -4,7 +4,7 @@
   "watchUrl": "",
   "givingUrl": "",
   "planningCenterGivingUrl": "https://irvingcollege.churchcenter.com/giving",
-  "calendarUrl": "https://calendar.google.com/calendar/embed?src=icbcnextsteps%40gmail.com&ctz=America%2FChicago",
+  "calendarUrl": "https://calendar.google.com/calendar/ical/icbcnextsteps%40gmail.com/public/basic.ics",
   "scriptures": [
     {
       "translation": "CSB",
