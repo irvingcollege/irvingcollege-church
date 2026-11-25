@@ -20,6 +20,7 @@ type Announcement = {
   buttonUrl?: string;
 };
 const announcements = (bulletin.announcements ?? []) as Announcement[];
+const pushAppId = import.meta.env.PUBLIC_ONESIGNAL_APP_ID?.trim() || '613575dc-0872-47f2-a4be-69f39f1b4f34';
 const siteOrigin = 'https://irvingcollege.church';
 function bulletinLink(value?: string) {
   if (!value?.trim()) return '';
@@ -38,20 +39,7 @@ const banners = (bulletin.banners ?? []).map((banner: { image: string; descripti
   description: banner.description,
   url: bulletinLink(banner.url),
 })).filter(banner => banner.image);
-function agendaUrl(value?: string) {
-  try {
-    const url = new URL(value?.trim() ?? '');
-    if (url.origin !== 'https://calendar.google.com' || url.pathname !== '/calendar/embed' ||
-        !url.searchParams.get('src')) return '';
-    url.searchParams.set('mode', 'AGENDA');
-    url.searchParams.set('ctz', 'America/Chicago');
-    url.searchParams.set('showTitle', '0');
-    return url.href;
-  } catch {
-    return '';
-  }
-}
-const calendarUrl = agendaUrl((sunday as { calendarUrl?: string }).calendarUrl);
+const hasCalendar = Boolean((sunday as { calendarUrl?: string }).calendarUrl?.trim());
 const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
 const events = (await getCollection('events'))
   .filter(({ data }) => data.date.toISOString().slice(0, 10) >= today)
@@ -69,12 +57,16 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   <link rel="icon" href="/images/sunday-icon.png" />
   <link rel="manifest" href="/sunday.webmanifest" />
   <title>This Sunday | Irving College Baptist Church</title>
+  {pushAppId && <script is:inline src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>}
 </head>
 <body>
   <header>
     <a href="/" class="church-wordmark" aria-label="Irving College Baptist Church home">
       <img src="/images/sunday-header.png?v=2" alt="Irving College Baptist Church" width="1560" height="225" />
     </a>
+    <button id="notification-bell" type="button" aria-label="Church notifications" title="Church notifications">
+      <svg aria-hidden="true" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+    </button>
   </header>
   <div class="cover">
     <img src="/images/hero/church-front.jpg" alt="Irving College Baptist Church" width="1672" height="941" fetchpriority="high" />
@@ -126,18 +118,21 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
       </div>}
       {!bulletin.text?.trim() && !announcements.length && !banners.length && <p>The weekly bulletin will appear here when it’s published.</p>}
     </section>
-    <section id="events" class="guide-section">
+    <section id="events" class="guide-section" data-calendar={hasCalendar ? "google" : undefined}>
       <h2>Calendar</h2>
-      {calendarUrl ? <iframe class="calendar-agenda" src={calendarUrl} title="ICBC Google Calendar agenda" loading="lazy"></iframe> : events.length ? <ul>{events.map(({data}) => <li>
+      <div id="event-list">
+      {events.length ? <ul>{events.map(({data}) => <li>
         <strong>{data.title}</strong>
         <p>{data.date.toLocaleDateString('en-US', {month:'long', day:'numeric', timeZone:'UTC'})} · {data.time} · {data.location}</p>
         <p>{data.description}</p>
       </li>)}</ul> : <p>Sunday School at 9:30 AM · Sunday Worship at 10:30 AM</p>}
+      </div>
     </section>
     <section id="give" class="guide-section">
       <h2>Give</h2>
+      {httpsLink(sunday.planningCenterGivingUrl, '') && <p><a href={httpsLink(sunday.planningCenterGivingUrl, '')} aria-label="Give with Church Center" style="display:inline-flex;align-items:center;min-height:44px"><img src="/images/church-center-logo.svg" width="164" alt="" style="display:block;height:auto"></a></p>}
       {httpsLink(sunday.givingUrl, '') && <p><a href={httpsLink(sunday.givingUrl, '')}>Give with Tithe.ly</a></p>}
-      <a href="https://venmo.com/irvingcollege">Give with Venmo</a>
+      <a href="https://venmo.com/irvingcollege" aria-label="Give with Venmo" style="display:inline-flex;align-items:center;min-height:44px"><img src="/images/venmo-logo.png" width="92" alt="" style="display:block;height:auto"></a>
     </section>
     <section id="watch" class="guide-section">
       <h2>Watch</h2>
@@ -159,6 +154,12 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   <aside id="install-reminder" hidden aria-label="Add the Sunday app to your phone">
     <button type="button" data-install>Add to Home Screen</button>
   </aside>
+  <dialog id="notification-help" aria-labelledby="notification-title">
+    <h2 id="notification-title">Church notifications</h2>
+    <p id="notification-status" role="status">Receive important church announcements and reminders.</p>
+    <button type="button" id="notification-toggle" disabled>Enable notifications</button>
+    <form method="dialog"><button>Close</button></form>
+  </dialog>
   <dialog id="install-help" aria-labelledby="install-title">
     <h2 id="install-title">Add to Home Screen</h2>
     <p id="install-steps"></p>
@@ -168,6 +169,41 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
 </body>
 </html>
 <script>
+  const eventList = document.querySelector('#events[data-calendar="google"] #event-list');
+  if (eventList) {
+    const formatDay = new Intl.DateTimeFormat('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC',
+    });
+    fetch('/.netlify/functions/sunday-agenda').then(async response => {
+      if (!response.ok) return;
+      const { events } = await response.json();
+      if (!Array.isArray(events)) return;
+      if (!events.length) {
+        const message = document.createElement('p');
+        message.textContent = 'No events are scheduled in the next six weeks.';
+        eventList.replaceChildren(message);
+        return;
+      }
+      const list = document.createElement('ul');
+      for (const event of events) {
+        const row = document.createElement('li');
+        const title = document.createElement('strong');
+        const details = document.createElement('p');
+        title.textContent = event.title;
+        const date = formatDay.format(new Date(event.date + 'T00:00:00Z'));
+        details.textContent = [date, event.time, event.location].filter(Boolean).join(' · ');
+        row.append(title, details);
+        if (event.description) {
+          const description = document.createElement('p');
+          description.textContent = event.description;
+          row.append(description);
+        }
+        list.append(row);
+      }
+      eventList.replaceChildren(list);
+    }).catch(() => { /* Keep the bulletin events if the calendar is unavailable. */ });
+  }
+
   const archiveStatus = document.getElementById('archive-status')!;
   const archiveSelect = document.querySelector<HTMLSelectElement>('#archive-select')!;
   const archivePlayer = document.getElementById('archive-player')!;
@@ -309,6 +345,65 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     }
   }
 </script>
+<script is:inline define:vars={{ pushAppId }}>
+  const bell = document.getElementById('notification-bell');
+  const dialog = document.getElementById('notification-help');
+  const status = document.getElementById('notification-status');
+  const toggle = document.getElementById('notification-toggle');
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  bell.addEventListener('click', () => dialog.showModal());
+  if (isIOS && !standalone) {
+    status.textContent = 'Add ICBC to your Home Screen, then open it and tap the bell to enable notifications.';
+  } else if (!pushAppId) {
+    status.textContent = 'Church notifications are being set up.';
+  } else {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async OneSignal => {
+      try {
+        await OneSignal.init({
+          appId: pushAppId,
+          serviceWorkerPath: 'push/onesignal/OneSignalSDKWorker.js',
+          serviceWorkerParam: { scope: '/push/onesignal/' },
+          notifyButton: { enable: false },
+          promptOptions: { slidedown: { prompts: [{ type: 'push', autoPrompt: false }] } },
+          welcomeNotification: { disable: true },
+        });
+        if (!OneSignal.Notifications.isPushSupported()) {
+          status.textContent = 'Notifications are unavailable in this browser.';
+          return;
+        }
+        const subscription = OneSignal.User.PushSubscription;
+        function update() {
+          const enabled = subscription.optedIn;
+          toggle.textContent = enabled ? 'Turn off notifications' : 'Enable notifications';
+          toggle.disabled = Notification.permission === 'denied';
+          status.textContent = enabled ? 'Church notifications are enabled.' :
+            toggle.disabled ? 'Notifications are blocked. Allow them in your browser or device settings.' :
+            'Receive important church announcements and reminders.';
+        }
+        OneSignal.Notifications.addEventListener('permissionChange', update);
+        subscription.addEventListener('change', update);
+        update();
+        toggle.addEventListener('click', async () => {
+          toggle.disabled = true;
+          try {
+            if (subscription.optedIn) await subscription.optOut();
+            else if (OneSignal.Notifications.permission) await subscription.optIn();
+            else await OneSignal.Notifications.requestPermission();
+            update();
+          } catch {
+            update();
+            status.textContent = 'Unable to change notifications. Please try again.';
+          }
+        });
+      } catch {
+        status.textContent = 'Notifications are temporarily unavailable.';
+      }
+    });
+  }
+</script>
 <style>
   :global(body) {
     margin: 0;
@@ -317,6 +412,15 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     font: 16px/1.6 system-ui, sans-serif;
     padding-bottom: calc(70px + env(safe-area-inset-bottom));
   }
+  header { position:relative; }
+  .church-wordmark { box-sizing:border-box; width:100%; padding-right:52px; }
+  #notification-bell { position:absolute; right:8px; top:50%; transform:translateY(-50%); min-width:44px; min-height:44px; display:grid; place-items:center; background:transparent; color:#101010; border:0; border-radius:8px; cursor:pointer; }
+  #notification-bell:hover { background:#ffffff50; }
+  #notification-help { width:min(400px,calc(100% - 64px)); border:0; border-radius:14px; padding:22px; }
+  #notification-help::backdrop { background:#0008; }
+  #notification-help button { font:inherit; min-height:44px; border:1px solid #105e56; border-radius:8px; padding:6px 14px; background:#41cfc1; color:#101010; cursor:pointer; }
+  #notification-help button:disabled { opacity:.55; cursor:default; }
+  #notification-help form { margin-top:12px; }
   header { background: #41cfc1; color: #101010; }
   .church-wordmark { display:block; max-width:940px; margin:auto; }
   .church-wordmark img { display:block; width:100%; height:auto; }
@@ -363,12 +467,11 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .live-badge { display:inline-block; border-radius:999px; color:#fff; background:#b42318; padding:.25rem .7rem; }
   .live-badge::before { content:'● '; }
   #archive-playing { margin:.5rem 0; }
-  .calendar-agenda { display:block; width:100%; height:540px; border:1px solid #cfe8e4; border-radius:10px; box-sizing:border-box; }
   .bulletin-text { white-space:pre-line; }
   summary { cursor:pointer; color:#11655d; font-weight:700; padding:.65rem 0; }
-  ul { list-style:none; padding:0; }
-  li { border-bottom:1px solid #deeeeb; padding:12px 0; }
-  li p { margin:.2rem 0; }
+  #event-list :global(ul) { list-style:none; padding:0; }
+  #event-list :global(li) { border-bottom:1px solid #deeeeb; padding:12px 0; }
+  #event-list :global(li p) { white-space:pre-line; margin:.2rem 0; }
   nav {
     position:fixed; z-index:1; bottom:0; inset-inline:0; display:flex; justify-content:center;
     background:#41cfc1; border-top:1px solid #24867d; padding-bottom:env(safe-area-inset-bottom);

@@ -183,7 +183,8 @@ collections:
           - { label: Service date (YYYY-MM-DD), name: date, widget: string, required: false }
           - { label: Past sermons link, name: watchUrl, widget: string, required: false }
           - { label: Tithe.ly giving link, name: givingUrl, widget: string, required: false }
-          - { label: Google Calendar embed URL, name: calendarUrl, widget: string, required: false, hint: "Paste the iframe src URL from Integrate calendar in Google Calendar settings." }
+          - { label: Planning Center Giving URL, name: planningCenterGivingUrl, widget: string, required: false }
+          - { label: Public Google Calendar URL, name: calendarUrl, widget: string, required: false, hint: "Paste the public iCal address or the iframe src URL from Integrate calendar. Only use a calendar intended for the public." }
           - label: Scripture passages
             name: scriptures
             widget: list
