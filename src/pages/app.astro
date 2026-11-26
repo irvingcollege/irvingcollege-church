@@ -1,5 +1,5 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import { loadCalendarEvents } from '../lib/sunday-agenda.mjs';
 import sunday from '../content/sunday/current.json';
 import calendarSnapshot from '../content/sunday/calendar-snapshot.json';
@@ -22,6 +22,7 @@ type Announcement = {
   buttonUrl?: string;
 };
 const announcements = (bulletin.announcements ?? []) as Announcement[];
+const weeklyMeal = (await getEntry('meal', 'meal'))?.data;
 const siteOrigin = 'https://irvingcollege.church';
 function bulletinLink(value?: string) {
   if (!value?.trim()) return '';
@@ -174,7 +175,33 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
       <h2 id="signup-title">Sign Up</h2>
       <form method="dialog"><button class="signup-close" aria-label="Close sign-up menu">Close</button></form>
     </div>
-    <a class="signup-choice" href="/meal/">Wednesday Night Supper <span aria-hidden="true">›</span></a>
+    <details class="signup-option" id="meal-signup-option">
+      <summary class="signup-choice">Wednesday Night Supper <span aria-hidden="true">›</span></summary>
+      <div class="signup-form">
+        <p id="meal-rsvp-date" aria-live="polite">Loading this week’s supper…</p>
+        <p id="meal-rsvp-deadline"></p>
+        {weeklyMeal?.showMenu && <div class="signup-meal-menu">
+          <strong>{weeklyMeal.title}</strong>
+          {weeklyMeal.menu && <p>{weeklyMeal.menu}</p>}
+          {weeklyMeal.note && <p>{weeklyMeal.note}</p>}
+        </div>}
+        <form id="meal-rsvp-form" class="signup-form">
+          <input type="hidden" name="eventDate">
+          <fieldset class="signup-meal-choices">
+            <legend>Will you be eating with us?</legend>
+            <label><input type="radio" name="attending" value="yes" required> Yes, we’ll be there</label>
+            <label><input type="radio" name="attending" value="no" required> No, not this week</label>
+          </fieldset>
+          <label id="meal-rsvp-number" hidden>How many people will be eating? <input name="numberEating" type="number" min="1" max="30" inputmode="numeric"></label>
+          <label>First name <input name="firstName" autocomplete="given-name" maxlength="50" required></label>
+          <label>Last name <input name="lastName" autocomplete="family-name" maxlength="50" required></label>
+          <small>Submitting again with the same first and last name updates your response.</small>
+          <button type="submit" disabled>Submit RSVP</button>
+        </form>
+        <p id="meal-rsvp-status" class="signup-status" role="status"></p>
+        <button type="button" id="meal-rsvp-change" hidden>Change my response</button>
+      </div>
+    </details>
     <details class="signup-option">
       <summary class="signup-choice">Ministry Opportunities <span aria-hidden="true">›</span></summary>
       <form class="signup-form" data-signup-type="ministry">
@@ -357,11 +384,104 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
 </script>
 <script is:inline>
   const signupDialog = document.getElementById('signup-menu');
-  document.getElementById('signup-button').addEventListener('click', () => signupDialog.showModal());
+  document.getElementById('signup-button').addEventListener('click', () => {
+    signupDialog.showModal();
+    if (mealOption.open) void loadMealWeek();
+  });
   const signupOptions = signupDialog.querySelectorAll('.signup-option');
   signupOptions.forEach(option => {
     option.addEventListener('toggle', () => {
       if (option.open) signupOptions.forEach(other => { if (other !== option) other.open = false; });
+    });
+  });
+  const mealOption = document.getElementById('meal-signup-option');
+  const mealForm = document.getElementById('meal-rsvp-form');
+  const mealSubmit = mealForm.querySelector('button[type="submit"]');
+  const mealStatus = document.getElementById('meal-rsvp-status');
+  const mealNumber = document.getElementById('meal-rsvp-number');
+  const mealChange = document.getElementById('meal-rsvp-change');
+  let mealLoading = false;
+  let mealSaving = false;
+  let mealReady = false;
+
+  async function loadMealWeek() {
+    if (mealLoading || mealSaving) return;
+    mealLoading = true;
+    mealReady = false;
+    mealSubmit.disabled = true;
+    try {
+      const response = await fetch('/.netlify/functions/meal-rsvp?action=info', { cache: 'no-store' });
+      if (!response.ok) throw new Error();
+      const week = await response.json();
+      if (mealForm.elements.eventDate.value && mealForm.elements.eventDate.value !== week.eventDate) {
+        mealForm.hidden = false;
+        mealChange.hidden = true;
+        mealStatus.textContent = '';
+      }
+      mealForm.elements.eventDate.value = week.eventDate;
+      document.getElementById('meal-rsvp-date').textContent = 'Wednesday, ' + week.eventLabel + ' at 5:30 PM';
+      document.getElementById('meal-rsvp-deadline').textContent = 'Please respond by ' + week.deadlineLabel + '.';
+      mealReady = true;
+    } catch {
+      mealStatus.textContent = 'Unable to load this week’s RSVP. Close and reopen supper to try again.';
+    } finally {
+      mealLoading = false;
+      mealSubmit.disabled = !mealReady || mealSaving;
+    }
+  }
+  mealOption.addEventListener('toggle', () => { if (mealOption.open) void loadMealWeek(); });
+  mealForm.addEventListener('change', event => {
+    if (event.target.name !== 'attending') return;
+    const attending = mealForm.elements.attending.value === 'yes';
+    mealNumber.hidden = !attending;
+    mealForm.elements.numberEating.required = attending;
+    if (!attending) mealForm.elements.numberEating.value = '';
+  });
+  mealForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!mealReady || mealSaving) return;
+    mealSaving = true;
+    mealSubmit.disabled = true;
+    mealStatus.textContent = 'Submitting your RSVP…';
+    let refresh = false;
+    try {
+      const response = await fetch('/.netlify/functions/meal-rsvp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(mealForm)))
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        refresh = result.refresh === true;
+        throw new Error(result.error || 'Unable to save your RSVP.');
+      }
+      mealForm.hidden = true;
+      mealChange.hidden = false;
+      mealStatus.textContent = result.message;
+    } catch (error) {
+      mealStatus.textContent = error.message || 'Unable to save your RSVP. Please try again.';
+    } finally {
+      mealSaving = false;
+      if (refresh) void loadMealWeek();
+      else mealSubmit.disabled = !mealReady;
+    }
+  });
+  mealChange.addEventListener('click', () => {
+    mealForm.hidden = false;
+    mealChange.hidden = true;
+    mealStatus.textContent = '';
+    void loadMealWeek();
+  });
+  // The weekly bulletin's supper link opens the same RSVP without leaving the app.
+  document.querySelectorAll('#bulletin a[href]').forEach(link => {
+    const url = new URL(link.href, location.href);
+    if (url.origin !== location.origin || !/^\/meal\/?$/.test(url.pathname)) return;
+    link.addEventListener('click', event => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      signupDialog.showModal();
+      mealOption.open = true;
+      void loadMealWeek();
     });
   });
   signupDialog.querySelectorAll('[data-signup-type]').forEach(form => {
@@ -432,7 +552,15 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .signup-form p { margin:0; }
   .signup-form label { display:grid; gap:4px; font-weight:650; min-width:0; }
   .signup-form input, .signup-form textarea { width:100%; box-sizing:border-box; min-width:0; border:1px solid #7b8794; border-radius:8px; padding:9px; font:inherit; background:#fff; color:#101010; }
-  .signup-times { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .signup-times { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+  .signup-form input[type="time"], .signup-form input[type="date"] { display:block; max-width:100%; }
+  .signup-form [hidden] { display:none; }
+  #meal-rsvp-form { padding:0; }
+  .signup-meal-menu { padding:10px 12px; background:#fff; border-radius:8px; }
+  .signup-meal-choices { display:grid; gap:10px; min-width:0; border:0; padding:0; margin:0; }
+  .signup-meal-choices legend { font-weight:650; margin-bottom:8px; }
+  .signup-meal-choices label { display:flex; align-items:center; gap:9px; }
+  .signup-meal-choices input[type="radio"] { width:auto; min-width:18px; accent-color:#087970; }
   .signup-form button, .signup-close { font:inherit; font-weight:700; min-height:44px; padding:8px 14px; border:0; border-radius:8px; color:#101010; background:#41cfc1; cursor:pointer; }
   .signup-form button:disabled { opacity:.55; cursor:default; }
   .signup-status { font-weight:600; }
