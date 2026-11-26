@@ -147,9 +147,11 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     </section>
     <section id="give" class="guide-section">
       <h2>Give</h2>
-      {httpsLink(sunday.planningCenterGivingUrl, '') && <p><a href={httpsLink(sunday.planningCenterGivingUrl, '')} aria-label="Give with Church Center" style="display:inline-flex;align-items:center;min-height:44px"><img src="/images/church-center-logo-white.svg" width="164" alt="" style="display:block;height:auto"></a></p>}
+      <div class="giving-links">
+        {httpsLink(sunday.planningCenterGivingUrl, '') && <a href={httpsLink(sunday.planningCenterGivingUrl, '')} aria-label="Give with Church Center"><img src="/images/church-center-logo-white.svg" width="164" alt=""></a>}
+        <a href="https://venmo.com/irvingcollege" aria-label="Give with Venmo"><img src="/images/venmo-logo-white.png" width="92" alt=""></a>
+      </div>
       {httpsLink(sunday.givingUrl, '') && <p><a href={httpsLink(sunday.givingUrl, '')}>Give with Tithe.ly</a></p>}
-      <a href="https://venmo.com/irvingcollege" aria-label="Give with Venmo" style="display:inline-flex;align-items:center;min-height:44px"><img src="/images/venmo-logo-white.png" width="92" alt="" style="display:block;height:auto"></a>
     </section>
     <section id="watch" class="guide-section">
       <h2>Watch</h2>
@@ -157,13 +159,9 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
         <p role="status"><strong class="live-badge">Live now</strong></p>
         <div id="sunday-live-player"></div>
       </div>
-      <h3 id="archive-title">Past Sermons</h3>
-      <select id="archive-select" aria-labelledby="archive-title" aria-describedby="archive-status" disabled>
-        <option value="">Choose a sermon</option>
-      </select>
-      <p id="archive-status" role="status">Loading sermons…</p>
+      <h3 id="archive-title">Latest Sermon</h3>
+      <p id="archive-status" role="status">Loading latest sermon…</p>
       <div id="archive-player" hidden><h4 id="archive-playing"></h4><video id="archive-video" controls playsinline preload="none"></video></div>
-      <p><a href={httpsLink(sunday.watchUrl, 'https://www.youtube.com/@irvingcollege.church')}>Watch on YouTube</a></p>
     </section>
     {scriptures.some(passage => !passage.translation?.trim() || /^(csb|christian standard bible)$/i.test(passage.translation.trim())) && <footer class="scripture-credit"><small>Scripture quotations marked CSB are from the Christian Standard Bible®, copyright © 2017 by Holman Bible Publishers. Used by permission.</small></footer>}
     <p id="install-link" hidden><button type="button" data-install>Add to Home Screen</button></p>
@@ -187,48 +185,30 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
 </html>
 <script>
   const archiveStatus = document.getElementById('archive-status')!;
-  const archiveSelect = document.querySelector<HTMLSelectElement>('#archive-select')!;
   const archivePlayer = document.getElementById('archive-player')!;
   const archiveVideo = document.querySelector<HTMLVideoElement>('#archive-video')!;
   const archivePlaying = document.getElementById('archive-playing')!;
   let archiveKey = '';
   function renderArchive(value: unknown) {
     const items = Array.isArray(value) ? value.filter(s => s && typeof s.date === 'string' && typeof s.url === 'string' && s.url.startsWith('https://live.irvingcollege.church/sermons/')) : [];
-    if (!items.length) {
-      if (!archiveKey) archiveStatus.textContent = 'No recordings available right now.';
+    const sermon = items.sort((a, b) => b.date.localeCompare(a.date))[0];
+    if (!sermon) {
+      if (!archiveKey) archiveStatus.textContent = 'No recording available right now.';
       return;
     }
-    const key = JSON.stringify(items);
+    const key = JSON.stringify(sermon);
     if (key === archiveKey) return;
     archiveKey = key;
-    archiveStatus.textContent = '';
-    const selected = archiveSelect.value;
-    archiveSelect.replaceChildren();
-    for (const sermon of items) {
-      const date = new Date(sermon.date + 'T12:00:00Z');
-      const label = Number.isNaN(date.getTime()) ? sermon.date : date.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric', timeZone:'UTC'});
-      const title = typeof sermon.title === 'string' && sermon.title.trim() ? sermon.title : label;
-      const option = document.createElement('option');
-      option.value = sermon.url;
-      option.textContent = title === label ? title : title + ' · ' + label;
-      archiveSelect.append(option);
-    }
-    archiveSelect.disabled = false;
-    if (items.some(sermon => sermon.url === selected)) archiveSelect.value = selected;
-    loadRecording(false);
-  }
-  function loadRecording(play: boolean) {
-    const option = archiveSelect.selectedOptions[0];
-    if (!option || archiveVideo.getAttribute('src') === option.value) return;
-    archivePlaying.textContent = option.textContent;
-    archiveVideo.src = option.value;
+    const date = new Date(sermon.date + 'T12:00:00Z');
+    const label = Number.isNaN(date.getTime()) ? sermon.date : date.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric', timeZone:'UTC'});
+    const title = typeof sermon.title === 'string' && sermon.title.trim() ? sermon.title : label;
+    archivePlaying.textContent = title.includes(label) ? title : title + ' · ' + label;
+    if (archiveVideo.getAttribute('src') !== sermon.url) archiveVideo.src = sermon.url;
     archivePlayer.hidden = false;
     archiveStatus.textContent = '';
-    if (play) void archiveVideo.play().catch(() => {});
   }
-  archiveSelect.addEventListener('change', () => loadRecording(true));
   archiveVideo.addEventListener('error', () => {
-    archiveStatus.textContent = 'This recording couldn’t play. Try another sermon or watch on YouTube.';
+    archiveStatus.textContent = 'This recording couldn’t play. Please try again shortly.';
   });
   const watchLabel = document.getElementById('watch-nav-label');
   const live = document.getElementById('sunday-live');
@@ -260,7 +240,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
         }
       } catch {
         // Keep any playing stream visible during a temporary connection failure.
-        if (!archiveKey) archiveStatus.textContent = 'Sermon archive temporarily unavailable. Please try again shortly.';
+        if (!archiveKey) archiveStatus.textContent = 'Latest sermon temporarily unavailable. Please try again shortly.';
       } finally {
         checking = false;
       }
@@ -479,8 +459,9 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .action { display:inline-flex; align-items:center; min-height:44px; }
   #sunday-live-player :global(iframe) { display:block; width:100%; aspect-ratio:16/9; border:0; border-radius:8px; background:#101010; }
   #archive-video { display:block; width:100%; aspect-ratio:16/9; background:#101010; border-radius:8px; }
-  #give a[aria-label] { padding:6px 0; }
-  #archive-select { width:100%; min-height:48px; font:inherit; padding:8px 12px; border:1px solid #24867d; border-radius:8px; color:#101010; background:#fff; }
+  .giving-links { display:flex; align-items:center; gap:clamp(12px,5vw,32px); }
+  .giving-links a { display:flex; align-items:center; min-width:0; min-height:44px; padding:6px 0; }
+  .giving-links img { display:block; max-width:100%; height:auto; }
   .live-badge { display:inline-block; border-radius:999px; color:#fff; background:#b42318; padding:.25rem .7rem; }
   .live-badge::before { content:'● '; }
   #archive-playing { margin:.5rem 0; }
