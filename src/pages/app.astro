@@ -137,7 +137,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
       {!bulletin.text?.trim() && !announcements.length && !banners.length && <p>The weekly bulletin will appear here when it’s published.</p>}
     </section>
     <section id="events" class="guide-section">
-      <h2>Calendar</h2>
+      <h2>Events</h2>
       <div id="event-list">
         {events.length ? <ul>{events.map(event => <li class="calendar-announcement">
           <h3>{event.title}</h3>
