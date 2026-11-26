@@ -64,8 +64,8 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#41cfc1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <link rel="apple-touch-icon" href="/images/sunday-icon.png" />
-  <link rel="icon" href="/images/sunday-icon.png" />
+  <link rel="apple-touch-icon" href="/images/sunday-icon-square-256.png" />
+  <link rel="icon" href="/images/sunday-icon-square-256.png" />
   <link rel="manifest" href="/sunday.webmanifest" />
   <title>This Sunday | Irving College Baptist Church</title>
   {pushAppId && <script is:inline src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>}
@@ -390,7 +390,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
 <style>
   :global(body) {
     margin: 0;
-    background: #101c2d;
+    background: #0b1322;
     color: #f7fafc;
     font: 16px/1.6 system-ui, sans-serif;
     padding-bottom: calc(70px + env(safe-area-inset-bottom));
@@ -400,7 +400,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
       content:"";
       display:block;
       height:max(48px, env(safe-area-inset-top));
-      background:#101c2d;
+      background:#0b1322;
     }
   }
   header { position:relative; }
@@ -416,7 +416,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .church-wordmark { display:block; max-width:940px; margin:auto; }
   .church-wordmark picture, .church-wordmark img { display:block; }
   .church-wordmark img { width:100%; height:auto; }
-  .cover { background: #101c2d; }
+  .cover { background: #0b1322; }
   .cover img {
     display: block; width: 100%; max-width: 1200px; height: clamp(170px, 37vw, 405px);
     object-fit: cover; object-position: center 55%; margin: auto;
@@ -440,7 +440,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .passages { list-style:none; padding:0; }
   .passages li { padding:0; }
   .read-passage { background:#fff; color:#101010; text-shadow:none; border:0; border-radius:7px; padding:.25rem .75rem; font:inherit; font-weight:700; }
-  .scripture-dialog { color:#f7fafc; background:#192b40; border:1px solid #35475a; border-radius:20px; box-sizing:border-box; width:min(540px,calc(100% - 32px)); max-height:80vh; max-height:80dvh; padding:clamp(18px,4vw,30px); overflow-y:auto; box-shadow:0 16px 48px #0007; }
+  .scripture-dialog { color:#101010; background:#f2f3f5; border:1px solid #d7d9dd; border-radius:20px; box-sizing:border-box; width:min(540px,calc(100% - 32px)); max-height:80vh; max-height:80dvh; padding:clamp(18px,4vw,30px); overflow-y:auto; box-shadow:0 16px 48px #0007; }
   .scripture-dialog::backdrop { background:rgba(0,0,0,.62); }
   .scripture-dialog-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
   .scripture-dialog-header h2 { margin:0; font-size:clamp(1.4rem,5vw,2rem); }
@@ -448,6 +448,7 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .scripture-dialog-header button { min-height:44px; cursor:pointer; }
   :global(body:has(.scripture-dialog[open])) { overflow:hidden; }
   .translation { color:#41cfc1; font-weight:700; }
+  .scripture-dialog .translation { color:#101010; }
   .verse-text { white-space:pre-wrap; font-size:1.12rem; overflow-wrap:anywhere; }
   :focus-visible { outline: 3px solid #41cfc1; outline-offset: 3px; }
   .bulletin-banners { display:grid; gap:14px; margin:18px 0; }
