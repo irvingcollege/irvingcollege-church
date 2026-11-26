@@ -22,7 +22,6 @@ type Announcement = {
   buttonUrl?: string;
 };
 const announcements = (bulletin.announcements ?? []) as Announcement[];
-const pushAppId = import.meta.env.PUBLIC_ONESIGNAL_APP_ID?.trim() || '613575dc-0872-47f2-a4be-69f39f1b4f34';
 const siteOrigin = 'https://irvingcollege.church';
 function bulletinLink(value?: string) {
   if (!value?.trim()) return '';
@@ -68,7 +67,6 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   <link rel="icon" href="/images/sunday-icon-square-256.png" />
   <link rel="manifest" href="/sunday.webmanifest" />
   <title>This Sunday | Irving College Baptist Church</title>
-  {pushAppId && <script is:inline src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>}
 </head>
 <body>
   <header>
@@ -78,8 +76,8 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
         <img src="/images/sunday-header.png?v=3" alt="Irving College Baptist Church" width="1560" height="225" fetchpriority="high" decoding="sync" />
       </picture>
     </a>
-    <button id="notification-bell" type="button" aria-label="Church notifications" title="Church notifications">
-      <svg aria-hidden="true" width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+    <button id="signup-button" type="button" aria-label="Sign up" title="Sign up" aria-haspopup="dialog">
+      <svg aria-hidden="true" width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5H5a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-3"/><rect x="8" y="2" width="8" height="5" rx="1.5"/><path d="m8 12 2 2 5-5M8 18h8"/></svg>
     </button>
   </header>
   <div class="cover">
@@ -171,11 +169,40 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   <aside id="install-reminder" hidden aria-label="Add the Sunday app to your phone">
     <button type="button" data-install>Add to Home Screen</button>
   </aside>
-  <dialog id="notification-help" aria-labelledby="notification-title">
-    <h2 id="notification-title">Church notifications</h2>
-    <p id="notification-status" role="status">Receive important church announcements and reminders.</p>
-    <button type="button" id="notification-toggle" disabled>Enable notifications</button>
-    <form method="dialog"><button>Close</button></form>
+  <dialog id="signup-menu" aria-labelledby="signup-title">
+    <div class="signup-heading">
+      <h2 id="signup-title">Sign Up</h2>
+      <form method="dialog"><button class="signup-close" aria-label="Close sign-up menu">Close</button></form>
+    </div>
+    <a class="signup-choice" href="/meal/">Wednesday Night Supper <span aria-hidden="true">›</span></a>
+    <details class="signup-option">
+      <summary class="signup-choice">Ministry Opportunities <span aria-hidden="true">›</span></summary>
+      <form class="signup-form" data-signup-type="ministry">
+        <label>Your name <input name="name" autocomplete="name" required maxlength="100"></label>
+        <label>Phone or email <input name="contact" required maxlength="160"></label>
+        <label>Where would you like to serve? <textarea name="interest" required maxlength="1000" rows="3"></textarea></label>
+        <label class="signup-trap" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off"></label>
+        <button type="submit">Submit interest</button>
+        <p class="signup-status" role="status"></p>
+      </form>
+    </details>
+    <details class="signup-option">
+      <summary class="signup-choice">Reserve Fellowship Hall <span aria-hidden="true">›</span></summary>
+      <form class="signup-form" data-signup-type="hall">
+        <p>Send a reservation request. Church leadership will confirm availability with you.</p>
+        <label>Your name <input name="name" autocomplete="name" required maxlength="100"></label>
+        <label>Phone or email <input name="contact" required maxlength="160"></label>
+        <label>Requested date <input type="date" name="date" required></label>
+        <div class="signup-times">
+          <label>Start time <input type="time" name="start" required></label>
+          <label>End time <input type="time" name="end" required></label>
+        </div>
+        <label>Purpose of reservation <textarea name="purpose" required maxlength="1000" rows="3"></textarea></label>
+        <label class="signup-trap" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off"></label>
+        <button type="submit">Request reservation</button>
+        <p class="signup-status" role="status"></p>
+      </form>
+    </details>
   </dialog>
   <dialog id="install-help" aria-labelledby="install-title">
     <h2 id="install-title">Add to Home Screen</h2>
@@ -328,63 +355,49 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     });
   });
 </script>
-<script is:inline define:vars={{ pushAppId }}>
-  const bell = document.getElementById('notification-bell');
-  const dialog = document.getElementById('notification-help');
-  const status = document.getElementById('notification-status');
-  const toggle = document.getElementById('notification-toggle');
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  bell.addEventListener('click', () => dialog.showModal());
-  if (isIOS && !standalone) {
-    status.textContent = 'Add ICBC to your Home Screen, then open it and tap the bell to enable notifications.';
-  } else if (!pushAppId) {
-    status.textContent = 'Church notifications are being set up.';
-  } else {
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    window.OneSignalDeferred.push(async OneSignal => {
+<script is:inline>
+  const signupDialog = document.getElementById('signup-menu');
+  document.getElementById('signup-button').addEventListener('click', () => signupDialog.showModal());
+  const signupOptions = signupDialog.querySelectorAll('.signup-option');
+  signupOptions.forEach(option => {
+    option.addEventListener('toggle', () => {
+      if (option.open) signupOptions.forEach(other => { if (other !== option) other.open = false; });
+    });
+  });
+  signupDialog.querySelectorAll('[data-signup-type]').forEach(form => {
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = form.querySelector('button[type="submit"]');
+      const status = form.querySelector('.signup-status');
+      button.disabled = true;
+      status.textContent = 'Submitting your request…';
       try {
-        await OneSignal.init({
-          appId: pushAppId,
-          serviceWorkerPath: 'push/onesignal/OneSignalSDKWorker.js',
-          serviceWorkerParam: { scope: '/push/onesignal/' },
-          notifyButton: { enable: false },
-          promptOptions: { slidedown: { prompts: [{ type: 'push', autoPrompt: false }] } },
-          welcomeNotification: { disable: true },
+        const response = await fetch('/.netlify/functions/signup-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), type: form.dataset.signupType })
         });
-        if (!OneSignal.Notifications.isPushSupported()) {
-          status.textContent = 'Notifications are unavailable in this browser.';
-          return;
-        }
-        const subscription = OneSignal.User.PushSubscription;
-        function update() {
-          const enabled = subscription.optedIn;
-          toggle.textContent = enabled ? 'Turn off notifications' : 'Enable notifications';
-          toggle.disabled = Notification.permission === 'denied';
-          status.textContent = enabled ? 'Church notifications are enabled.' :
-            toggle.disabled ? 'Notifications are blocked. Allow them in your browser or device settings.' :
-            'Receive important church announcements and reminders.';
-        }
-        OneSignal.Notifications.addEventListener('permissionChange', update);
-        subscription.addEventListener('change', update);
-        update();
-        toggle.addEventListener('click', async () => {
-          toggle.disabled = true;
-          try {
-            if (subscription.optedIn) await subscription.optOut();
-            else if (OneSignal.Notifications.permission) await subscription.optIn();
-            else await OneSignal.Notifications.requestPermission();
-            update();
-          } catch {
-            update();
-            status.textContent = 'Unable to change notifications. Please try again.';
-          }
-        });
-      } catch {
-        status.textContent = 'Notifications are temporarily unavailable.';
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Unable to submit.');
+        form.reset();
+        status.textContent = form.dataset.signupType === 'hall'
+          ? 'Your reservation request was received. Please wait for confirmation.'
+          : 'Thank you! Your ministry interest was received.';
+      } catch (error) {
+        status.textContent = error.message || 'Unable to submit. Please try again.';
+      } finally {
+        button.disabled = false;
       }
     });
+  });
+  // Retire existing subscriptions from the app's dedicated notification worker.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration('/push/onesignal/').then(async registration => {
+      if (!registration || new URL(registration.scope).pathname !== '/push/onesignal/') return;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) await subscription.unsubscribe();
+      await registration.unregister();
+    }).catch(() => {});
   }
 </script>
 <style>
@@ -405,13 +418,26 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   }
   header { position:relative; }
   .church-wordmark { box-sizing:border-box; width:100%; padding-right:52px; }
-  #notification-bell { position:absolute; right:8px; top:50%; transform:translateY(-50%); min-width:44px; min-height:44px; display:grid; place-items:center; background:transparent; color:#101010; border:0; border-radius:8px; cursor:pointer; }
-  #notification-bell:hover { background:#ffffff50; }
-  #notification-help { width:min(400px,calc(100% - 64px)); border:0; border-radius:14px; padding:22px; }
-  #notification-help::backdrop { background:#0008; }
-  #notification-help button { font:inherit; min-height:44px; border:1px solid #105e56; border-radius:8px; padding:6px 14px; background:#41cfc1; color:#101010; cursor:pointer; }
-  #notification-help button:disabled { opacity:.55; cursor:default; }
-  #notification-help form { margin-top:12px; }
+  #signup-button { position:absolute; right:8px; top:50%; transform:translateY(-50%); min-width:44px; min-height:44px; display:grid; place-items:center; background:transparent; color:#101010; border:0; border-radius:8px; cursor:pointer; }
+  #signup-button:hover { background:#ffffff50; }
+  #signup-menu { width:min(440px,calc(100% - 32px)); max-height:85dvh; box-sizing:border-box; border:0; border-radius:18px; padding:22px; background:#f2f3f5; color:#101010; overflow-y:auto; }
+  #signup-menu::backdrop { background:#0009; }
+  .signup-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:18px; }
+  .signup-heading h2 { margin:0; }
+  .signup-heading form { margin:0; }
+  .signup-choice { color:#101010; display:flex; align-items:center; justify-content:space-between; min-height:48px; gap:10px; padding:12px 0; font-weight:700; border-bottom:1px solid #ccd4d9; text-decoration:none; cursor:pointer; }
+  .signup-choice span { font-size:1.5rem; line-height:1; }
+  .signup-option[open] .signup-choice span { transform:rotate(90deg); }
+  .signup-form { display:grid; gap:12px; padding:12px 0; }
+  .signup-form p { margin:0; }
+  .signup-form label { display:grid; gap:4px; font-weight:650; min-width:0; }
+  .signup-form input, .signup-form textarea { width:100%; box-sizing:border-box; min-width:0; border:1px solid #7b8794; border-radius:8px; padding:9px; font:inherit; background:#fff; color:#101010; }
+  .signup-times { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .signup-form button, .signup-close { font:inherit; font-weight:700; min-height:44px; padding:8px 14px; border:0; border-radius:8px; color:#101010; background:#41cfc1; cursor:pointer; }
+  .signup-form button:disabled { opacity:.55; cursor:default; }
+  .signup-status { font-weight:600; }
+  .signup-trap { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  :global(body:has(#signup-menu[open])) { overflow:hidden; }
   header { background: #41cfc1; color: #101010; }
   .church-wordmark { display:block; max-width:940px; margin:auto; }
   .church-wordmark picture, .church-wordmark img { display:block; }

@@ -1,0 +1,85 @@
+---
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Signup Requests | ICBC</title>
+</head>
+<body>
+  <main>
+    <a href="/app/">← Back to ICBC app</a>
+    <h1>Signup Requests</h1>
+    <p>Use the Wednesday meal results password to view ministry interests and fellowship hall requests.</p>
+    <form id="access">
+      <label>Results password <input type="password" id="password" required autocomplete="current-password"></label>
+      <button type="submit">View requests</button>
+    </form>
+    <p id="status" role="status"></p>
+    <section id="results" hidden>
+      <h2>Ministry Opportunities</h2>
+      <ul id="ministry"></ul>
+      <h2>Fellowship Hall Reservation Requests</h2>
+      <ul id="hall"></ul>
+    </section>
+  </main>
+</body>
+</html>
+<script is:inline>
+  const form = document.getElementById('access');
+  const status = document.getElementById('status');
+  const results = document.getElementById('results');
+  function render(list, entries) {
+    list.replaceChildren();
+    if (!entries.length) {
+      const item = document.createElement('li');
+      item.textContent = 'No requests yet.';
+      list.append(item);
+      return;
+    }
+    for (const request of entries) {
+      const item = document.createElement('li');
+      const name = document.createElement('strong');
+      name.textContent = request.name;
+      const detail = document.createElement('p');
+      detail.textContent = request.type === 'hall' ? [request.date, request.start + ' – ' + request.end, request.purpose].join('\n') : request.interest;
+      const contact = document.createElement('p');
+      contact.textContent = request.contact;
+      item.append(name, contact, detail);
+      list.append(item);
+    }
+  }
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    results.hidden = true;
+    status.textContent = 'Loading requests…';
+    try {
+      const response = await fetch('/.netlify/functions/signup-requests', {
+        headers: { Authorization: 'Bearer ' + document.getElementById('password').value },
+        cache: 'no-store'
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to load requests.');
+      render(document.getElementById('ministry'), data.requests.filter(r => r.type === 'ministry'));
+      render(document.getElementById('hall'), data.requests.filter(r => r.type === 'hall'));
+      results.hidden = false;
+      status.textContent = '';
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  });
+</script>
+<style>
+  :global(body) { margin:0; color:#f7fafc; background:#0b1322; font:16px/1.6 system-ui,sans-serif; }
+  main { max-width:760px; margin:auto; padding:24px; }
+  a { color:#41cfc1; font-weight:700; }
+  form { display:grid; gap:12px; max-width:350px; }
+  label { display:grid; gap:6px; font-weight:700; }
+  input,button { box-sizing:border-box; font:inherit; padding:12px; border:0; border-radius:8px; }
+  button { background:#41cfc1; color:#101010; font-weight:700; cursor:pointer; }
+  ul { padding:0; list-style:none; }
+  li { border-bottom:1px solid #35475a; padding:12px 0; }
+  li p { white-space:pre-line; overflow-wrap:anywhere; margin:.3rem 0; }
+</style>
