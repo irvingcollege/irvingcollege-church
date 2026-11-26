@@ -548,12 +548,17 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
   .signup-choice { color:#101010; display:flex; align-items:center; justify-content:space-between; min-height:48px; gap:10px; padding:12px 0; font-weight:700; border-bottom:1px solid #ccd4d9; text-decoration:none; cursor:pointer; }
   .signup-choice span { font-size:1.5rem; line-height:1; }
   .signup-option[open] .signup-choice span { transform:rotate(90deg); }
-  .signup-form { display:grid; gap:12px; padding:12px 0; }
+  .signup-form { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; padding:12px 0; }
   .signup-form p { margin:0; }
-  .signup-form label { display:grid; gap:4px; font-weight:650; min-width:0; }
+  .signup-form label { display:grid; grid-template-columns:minmax(0,1fr); gap:4px; font-weight:650; min-width:0; }
   .signup-form input, .signup-form textarea { width:100%; box-sizing:border-box; min-width:0; border:1px solid #7b8794; border-radius:8px; padding:9px; font:inherit; background:#fff; color:#101010; }
   .signup-times { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
-  .signup-form input[type="time"], .signup-form input[type="date"] { display:block; max-width:100%; }
+  .signup-form input[type="time"], .signup-form input[type="date"] {
+    -webkit-appearance:none; appearance:none; display:block; width:100%;
+    inline-size:100%; min-width:0; max-width:100%; min-height:44px; text-align:left;
+  }
+  .signup-form input[type="time"]::-webkit-date-and-time-value,
+  .signup-form input[type="date"]::-webkit-date-and-time-value { text-align:left; min-height:1.5em; }
   .signup-form [hidden] { display:none; }
   #meal-rsvp-form { padding:0; }
   .signup-meal-menu { padding:10px 12px; background:#fff; border-radius:8px; }
