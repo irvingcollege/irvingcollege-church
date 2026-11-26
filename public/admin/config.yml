@@ -179,7 +179,7 @@ collections:
         label: This Sunday
         file: src/content/sunday/current.json
         fields:
-          - { label: Message title, name: title, widget: string }
+          - { label: Sermon title, name: title, widget: string, hint: "Enter only the sermon title. The app automatically displays This Sunday’s Message above it." }
           - { label: Service date (YYYY-MM-DD), name: date, widget: string, required: false }
           - { label: Past sermons link, name: watchUrl, widget: string, required: false }
           - { label: Tithe.ly giving link, name: givingUrl, widget: string, required: false }
