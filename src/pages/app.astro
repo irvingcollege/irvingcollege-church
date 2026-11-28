@@ -644,7 +644,9 @@ const scriptures = (sunday.scriptures ?? []) as { reference: string; text: strin
     color:#101010; display:grid; place-content:center; min-height:56px;
     padding:0 clamp(6px,2vw,21px); font-weight:650; font-size:clamp(.72rem,2.8vw,.9rem); text-decoration:none;
   }
-  nav a:hover, nav a:focus-visible { background:#b3efe9; color:#101010; }
+  nav a { -webkit-tap-highlight-color:transparent; }
+  nav a:hover, nav a:active, nav a:focus-visible { background:transparent; color:#101010; }
+  nav a:focus-visible { outline:2px solid #101010; outline-offset:-4px; }
   .scripture-credit { border-top:1px solid #35475a; padding:14px 0 22px; color:#cbd5e1; }
   #install-reminder {
     position:fixed; z-index:2; bottom:calc(66px + env(safe-area-inset-bottom));
